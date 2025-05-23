@@ -42,4 +42,17 @@ export interface AppStore {
   clearAll: () => void;
   clearHistory: () => void;
   toggleDarkMode: () => void;
+  exportConfiguration: () => string;
+  importConfiguration: (jsonData: string) => boolean;
+}
+
+// For when users download team data for later use
+export interface ExportData {
+  version: string;
+  exportDate: string;
+  eventName: string;
+  organizerName: string;
+  players: Player[];
+  teams: Team[];
+  teamSize: number;
 }

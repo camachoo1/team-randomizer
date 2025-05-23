@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppStore, Team, HistoryEntry } from '../types';
+import { AppStore, Team, HistoryEntry, ExportData } from '../types';
 
 /**
  * Hook for initializing a Zustand store that persists throughout.
@@ -204,6 +204,48 @@ const useStore = create<AppStore>()(
           document.body.classList.remove('dark');
         }
         set({ darkMode: newDarkMode });
+      },
+
+      exportConfiguration: () => {
+        const state = get();
+        const exportData: ExportData = {
+          version: '1.0',
+          exportDate: new Date().toISOString(),
+          eventName: state.eventName,
+          organizerName: state.organizerName,
+          players: state.players,
+          teams: state.teams,
+          teamSize: state.teamSize,
+        };
+        return JSON.stringify(exportData, null, 2);
+      },
+
+      importConfiguration: (jsonData: string) => {
+        try {
+          const data = JSON.parse(jsonData) as ExportData;
+
+          // Validate the data structure
+          if (
+            !data.version ||
+            !Array.isArray(data.players) ||
+            !Array.isArray(data.teams)
+          ) {
+            return false;
+          }
+
+          set({
+            eventName: data.eventName || '',
+            organizerName: data.organizerName || '',
+            players: data.players || [],
+            teams: data.teams || [],
+            teamSize: data.teamSize || 2,
+          });
+
+          return true;
+        } catch (error) {
+          console.error('Failed to import configuration:', error);
+          return false;
+        }
       },
     }),
     {
