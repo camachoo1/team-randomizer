@@ -66,7 +66,7 @@ const PlayerManager: React.FC = () => {
             onChange={(e) =>
               setTeamSize(parseInt(e.target.value) || 2)
             }
-            className='input-field w-24 text-center font-bold text-lg'
+            className='input-field w-24 text-center font-bold text-lg rounded-lg'
           />
           <span className='text-sm text-gray-500 dark:text-gray-400'>
             players per team

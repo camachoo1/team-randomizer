@@ -68,10 +68,7 @@ function App() {
                 size={16}
                 className='text-primary animate-pulse-subtle'
               />
-              <span>
-                Team Randomizer • Built with React + TypeScript +
-                Tailwind CSS
-              </span>
+              <span>Teamify • Built by NotFaade</span>
               <Sparkles
                 size={16}
                 className='text-primary animate-pulse-subtle'
