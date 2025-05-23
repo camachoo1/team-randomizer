@@ -6,6 +6,7 @@ import { Sparkles } from 'lucide-react';
 import useStore from './store/useStore';
 import ImportExport from './components/ImportExport';
 import TeamDisplay from './components/TeamDisplay';
+import History from './components/History';
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);
@@ -43,10 +44,10 @@ function App() {
               <EventSettings />
               <PlayerManager />
               <ImportExport />
+              <History />
             </div>
 
             <div className='lg:col-span-2'>
-              {/* Placeholder for TeamDisplay */}
               <TeamDisplay />
             </div>
           </div>
