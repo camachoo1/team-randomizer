@@ -19,7 +19,7 @@ export interface HistoryEntry {
   organizerName: string;
 }
 
-export interface Store {
+export interface AppStore {
   // State
   eventName: string;
   organizerName: string;
