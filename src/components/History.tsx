@@ -1,3 +1,21 @@
+import { Clock } from 'lucide-react';
+import useStore from '../store/useStore';
+
 export default function History() {
-  return <>History</>;
+  const { history, loadHistoryEntry, clearHistory } = useStore();
+  return (
+    <div
+      className='card animate-fade-in'
+      style={{ animationDelay: '0.3s' }}
+    >
+      <div className='flex items-center justify-between mb-6'>
+        <div className='flex items-center gap-3'>
+          <div className='p-2.5 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-xl'>
+            <Clock className='text-primary' size={22} />
+          </div>
+          <h2 className='text-xl font-bold'>History</h2>
+        </div>
+      </div>
+    </div>
+  );
 }
