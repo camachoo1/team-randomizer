@@ -8,6 +8,7 @@ import ImportExport from './components/ImportExport';
 import TeamDisplay from './components/TeamDisplay';
 import History from './components/History';
 import BulkExport from './components/BulkExport';
+import BracketIntegration from './components/BracketIntegration';
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);
@@ -49,8 +50,9 @@ function App() {
               <History />
             </div>
 
-            <div className='lg:col-span-2'>
+            <div className='lg:col-span-2 space-y-6'>
               <TeamDisplay />
+              <BracketIntegration />
             </div>
           </div>
         </main>
