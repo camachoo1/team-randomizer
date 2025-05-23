@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   Archive,
   ChevronDown,
   Clock,
@@ -52,6 +53,43 @@ export default function History() {
           </button>
         )}
       </div>
+
+      {showClearConfirm && (
+        <div
+          className='mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl 
+                      border border-red-200 dark:border-red-800 animate-slide-up'
+        >
+          <div className='flex gap-3 mb-3'>
+            <AlertCircle
+              className='text-red-600 flex-shrink-0 mt-0.5'
+              size={20}
+            />
+            <div className='flex-1'>
+              <p className='font-semibold text-red-900 dark:text-red-100'>
+                Clear all history?
+              </p>
+              <p className='text-sm text-red-700 dark:text-red-300 mt-1'>
+                This will permanently delete all {history.length}{' '}
+                saved team configurations.
+              </p>
+            </div>
+          </div>
+          <div className='flex gap-2 ml-8'>
+            <button
+              onClick={handleClearHistory}
+              className='btn-danger'
+            >
+              Clear History
+            </button>
+            <button
+              onClick={() => setShowClearConfirm(false)}
+              className='btn-ghost'
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {history.length === 0 ? (
         <div className='text-center py-12 text-gray-400'>
