@@ -1,22 +1,30 @@
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { Calendar, User, Sparkles, Save } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import useStore from '../store/useStore';
+import clsx from 'clsx';
+
+interface EventForm {
+  eventName: string;
+  organizerName: string;
+}
 
 const EventSettings: React.FC = () => {
   const { eventName, organizerName, setEventInfo } = useStore();
-  const [localEvent, setLocalEvent] = useState(eventName);
-  const [localOrganizer, setLocalOrganizer] = useState(organizerName);
-  const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    setLocalEvent(eventName);
-    setLocalOrganizer(organizerName);
-  }, [eventName, organizerName]);
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting, isSubmitSuccessful },
+  } = useForm<EventForm>({
+    defaultValues: {
+      eventName,
+      organizerName,
+    },
+  });
 
-  const handleSave = () => {
-    setEventInfo(localEvent, localOrganizer);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const onSubmit = (data: EventForm) => {
+    setEventInfo(data.eventName, data.organizerName);
   };
 
   return (
@@ -28,16 +36,14 @@ const EventSettings: React.FC = () => {
         <h2 className='text-xl font-bold'>Event Settings</h2>
       </div>
 
-      <div className='space-y-5'>
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-5'>
         <div>
           <label className='flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300'>
             <Calendar size={16} />
             Event Name
           </label>
           <input
-            type='text'
-            value={localEvent}
-            onChange={(e) => setLocalEvent(e.target.value)}
+            {...register('eventName')}
             className='input-field'
             placeholder='Summer Tournament 2024'
           />
@@ -49,28 +55,24 @@ const EventSettings: React.FC = () => {
             Organizer Name
           </label>
           <input
-            type='text'
-            value={localOrganizer}
-            onChange={(e) => setLocalOrganizer(e.target.value)}
+            {...register('organizerName')}
             className='input-field'
             placeholder='John Doe'
           />
         </div>
 
         <button
-          onClick={handleSave}
-          className='btn-primary w-full flex items-center justify-center gap-2'
-        >
-          {saved ? (
-            <>
-              <Save size={18} />
-              Saved!
-            </>
-          ) : (
-            'Save Settings'
+          type='submit'
+          disabled={isSubmitting}
+          className={clsx(
+            'btn-primary w-full flex items-center justify-center gap-2',
+            isSubmitSuccessful && 'bg-green-600 hover:bg-green-700'
           )}
+        >
+          <Save size={18} />
+          {isSubmitSuccessful ? 'Saved!' : 'Save Settings'}
         </button>
-      </div>
+      </form>
     </div>
   );
 };
