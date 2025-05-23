@@ -2,6 +2,18 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppStore, Team, HistoryEntry } from '../types';
 
+/**
+ * Hook for initializing a Zustand store that persists throughout.
+ *
+ * Manages global state such as event/organizer name, players, teams,
+ * team sizes, team configuration history, and UI data such as dark mode.
+ *
+ * Also, creates actions for manipulating global state such as adding or removing
+ * players, team assignments, randomizing teams based on players, and storing
+ * historical team creation data with retrieval.
+ *
+ * @returns { AppStore } - zustand store object with state and actions for managing said state
+ */
 const useStore = create<AppStore>()(
   persist(
     (set, get) => ({
