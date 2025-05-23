@@ -22,7 +22,7 @@ const Header: React.FC = () => {
                 className='text-2xl font-bold bg-gradient-to-r from-primary to-rose-600 
                            bg-clip-text text-transparent'
               >
-                Team Randomizer
+                Teamify
               </h1>
               {eventName && (
                 <p className='text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2'>

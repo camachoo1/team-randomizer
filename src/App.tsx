@@ -7,6 +7,7 @@ import useStore from './store/useStore';
 import ImportExport from './components/ImportExport';
 import TeamDisplay from './components/TeamDisplay';
 import History from './components/History';
+import BulkExport from './components/BulkExport';
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);
@@ -43,6 +44,7 @@ function App() {
             <div className='lg:col-span-1 space-y-6'>
               <EventSettings />
               <PlayerManager />
+              <BulkExport />
               <ImportExport />
               <History />
             </div>
