@@ -5,14 +5,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        'primary-accent': '#0f172a',
-        'primary-base': '#be123c',
-        'complimentary-accent': '#cbd5e1',
-        secondary: '#fafafa',
-        // Dark mode colors
-        'dark-bg': '#0a0a0b',
-        'dark-card': '#18181b',
-        'dark-border': '#27272a',
+        primary: '#be123c', // Ruby red
+        'primary-dark': '#9f1239', // Darker ruby
+        accent: '#0f172a', // Rich slate
+        'accent-light': '#1e293b', // Lighter slate
+        surface: '#f8fafc', // Light surface
+        'surface-dark': '#0a0a0b', // Dark surface
+        'card-dark': '#18181b', // Dark card
+        'border-dark': '#27272a', // Dark border
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -33,12 +33,6 @@ export default {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' },
         },
-      },
-      backgroundImage: {
-        'gradient-radial':
-          'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-premium':
-          'linear-gradient(135deg, var(--tw-gradient-stops))',
       },
     },
   },
