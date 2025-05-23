@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react';
+import { Clock, Trash2 } from 'lucide-react';
 import useStore from '../store/useStore';
 
 export default function History() {
@@ -15,6 +15,16 @@ export default function History() {
           </div>
           <h2 className='text-xl font-bold'>History</h2>
         </div>
+        {history.length > 0 && (
+          <button
+            onClick={() => setShowClearConfirm(true)}
+            className='p-2 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 
+                     rounded-lg transition-all duration-200'
+            title='Clear all history'
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
       </div>
     </div>
   );
