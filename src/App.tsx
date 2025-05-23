@@ -4,6 +4,7 @@ import EventSettings from './components/EventSettings';
 import PlayerManager from './components/PlayerManager';
 import { Sparkles } from 'lucide-react';
 import useStore from './store/useStore';
+import ImportExport from './components/ImportExport';
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);
@@ -40,6 +41,7 @@ function App() {
             <div className='lg:col-span-1 space-y-6'>
               <EventSettings />
               <PlayerManager />
+              <ImportExport />
             </div>
 
             <div className='lg:col-span-2'>
