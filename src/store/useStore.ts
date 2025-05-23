@@ -82,6 +82,7 @@ const useStore = create<AppStore>()(
         });
 
         // Distribute unlocked players evenly
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         shuffled.forEach((player, idx) => {
           // Find team with fewest players
           const teamIndex = newTeams.reduce(
@@ -137,6 +138,7 @@ const useStore = create<AppStore>()(
           const player = state.players.find((p) => p.id === playerId);
           if (!player || player.locked) return state;
 
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const updatedTeams = state.teams.map((team, idx) => ({
             ...team,
             players: team.players.filter((p) => p.id !== playerId),
