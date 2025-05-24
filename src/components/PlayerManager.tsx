@@ -1,11 +1,26 @@
-import React from 'react';
-import { X, Lock, Unlock, UserPlus, Hash, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  X,
+  Lock,
+  Unlock,
+  UserPlus,
+  Hash,
+  Users,
+  FileText,
+  Plus,
+  Trash2,
+  AlertCircle,
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import useStore from '../store/useStore';
 import clsx from 'clsx';
 
 interface PlayerForm {
   playerName: string;
+}
+
+interface BulkPlayerForm {
+  playerList: string;
 }
 
 const PlayerManager: React.FC = () => {
@@ -18,12 +33,53 @@ const PlayerManager: React.FC = () => {
     setTeamSize,
   } = useStore();
 
+  const [showBulkAdd, setShowBulkAdd] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   const { register, handleSubmit, reset } = useForm<PlayerForm>();
+  const {
+    register: registerBulk,
+    handleSubmit: handleSubmitBulk,
+    reset: resetBulk,
+    formState: { errors: bulkErrors },
+  } = useForm<BulkPlayerForm>();
 
   const onSubmit = (data: PlayerForm) => {
     if (data.playerName.trim()) {
       addPlayer(data.playerName.trim());
       reset();
+    }
+  };
+
+  const handleClearAllPlayers = () => {
+    // Remove all unlocked players
+    const unlockedPlayers = players.filter(
+      (player) => !player.locked
+    );
+    unlockedPlayers.forEach((player) => removePlayer(player.id));
+    setShowClearConfirm(false);
+  };
+
+  const onBulkSubmit = (data: BulkPlayerForm) => {
+    const playerNames = data.playerList
+      .split('\n')
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0);
+
+    if (playerNames.length > 0) {
+      playerNames.forEach((name) => {
+        // Check if player doesn't already exist (case-insensitive)
+        if (
+          !players.some(
+            (player) =>
+              player.name.toLowerCase() === name.toLowerCase()
+          )
+        ) {
+          addPlayer(name);
+        }
+      });
+      resetBulk();
+      setShowBulkAdd(false);
     }
   };
 
@@ -37,20 +93,137 @@ const PlayerManager: React.FC = () => {
           <UserPlus className='text-primary' size={22} />
         </div>
         <h2 className='text-xl font-bold'>Players</h2>
+        <div className='ml-auto flex gap-2'>
+          <button
+            onClick={() => setShowBulkAdd(!showBulkAdd)}
+            className={clsx(
+              'p-2 rounded-lg transition-all duration-200 text-sm',
+              showBulkAdd
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+            )}
+            title='Bulk add players'
+          >
+            {showBulkAdd ? <X size={16} /> : <FileText size={16} />}
+          </button>
+          {players.length > 0 && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className='p-2 rounded-lg transition-all duration-200 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600'
+              title='Clear all players'
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className='mb-6'>
-        <div className='flex gap-2'>
-          <input
-            {...register('playerName', { required: true })}
-            className='input-field flex-1'
-            placeholder='Enter player name'
-          />
-          <button type='submit' className='btn-primary px-8'>
-            Add
-          </button>
+      {showClearConfirm && (
+        <div className='mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 animate-slide-up'>
+          <div className='flex gap-3 mb-3'>
+            <AlertCircle
+              className='text-red-600 flex-shrink-0 mt-0.5'
+              size={20}
+            />
+            <div className='flex-1'>
+              <p className='font-semibold text-red-900 dark:text-red-100'>
+                Clear all players?
+              </p>
+              <p className='text-sm text-red-700 dark:text-red-300 mt-1'>
+                This will remove all{' '}
+                {players.filter((p) => !p.locked).length} unlocked
+                players.
+                {players.filter((p) => p.locked).length > 0 &&
+                  ` Locked players will remain.`}
+              </p>
+            </div>
+          </div>
+          <div className='flex gap-2 ml-8'>
+            <button
+              onClick={handleClearAllPlayers}
+              className='btn-danger'
+            >
+              Clear Players
+            </button>
+            <button
+              onClick={() => setShowClearConfirm(false)}
+              className='btn-ghost'
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      </form>
+      )}
+
+      {showBulkAdd ? (
+        <form
+          onSubmit={handleSubmitBulk(onBulkSubmit)}
+          className='mb-6'
+        >
+          <div className='space-y-3'>
+            <label className='block text-sm font-semibold text-gray-700 dark:text-gray-300'>
+              Bulk Add Players
+            </label>
+            <textarea
+              {...registerBulk('playerList', {
+                required: 'Please enter at least one player name',
+                validate: (value) => {
+                  const names = value
+                    .split('\n')
+                    .filter((name) => name.trim().length > 0);
+                  return (
+                    names.length > 0 ||
+                    'Please enter at least one player name'
+                  );
+                },
+              })}
+              className='input-field min-h-[120px] resize-none'
+              placeholder='Enter player names (one per line)&#10;John Doe&#10;Jane Smith&#10;Mike Johnson'
+            />
+            {bulkErrors.playerList && (
+              <p className='text-red-500 text-sm'>
+                {bulkErrors.playerList.message}
+              </p>
+            )}
+            <p className='text-xs text-gray-500 dark:text-gray-400'>
+              Enter one player name per line. Duplicate names will be
+              skipped.
+            </p>
+            <div className='flex gap-2'>
+              <button
+                type='submit'
+                className='btn-primary flex items-center gap-2'
+              >
+                <Plus size={16} />
+                Add All Players
+              </button>
+              <button
+                type='button'
+                onClick={() => {
+                  setShowBulkAdd(false);
+                  resetBulk();
+                }}
+                className='btn-ghost'
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className='mb-6'>
+          <div className='flex gap-2'>
+            <input
+              {...register('playerName', { required: true })}
+              className='input-field flex-1'
+              placeholder='Enter player name'
+            />
+            <button type='submit' className='btn-primary px-8'>
+              Add
+            </button>
+          </div>
+        </form>
+      )}
 
       <div className='mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl'>
         <label className='flex items-center gap-2 text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300'>
@@ -80,7 +253,7 @@ const PlayerManager: React.FC = () => {
             <Users size={48} className='mx-auto mb-3 opacity-30' />
             <p className='font-medium'>No players added yet</p>
             <p className='text-sm mt-1'>
-              Add players to start creating teams
+              Add players individually or use bulk add
             </p>
           </div>
         ) : (
