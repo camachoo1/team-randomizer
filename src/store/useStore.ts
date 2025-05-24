@@ -48,6 +48,8 @@ const useStore = create<AppStore>()(
           players: state.players.filter((p) => p.id !== playerId),
         })),
 
+      clearTeams: () => set({ teams: [] }),
+
       togglePlayerLock: (playerId: number) =>
         set((state) => ({
           players: state.players.map((p) =>

@@ -31,6 +31,7 @@ const PlayerManager: React.FC = () => {
     togglePlayerLock,
     teamSize,
     setTeamSize,
+    clearTeams,
   } = useStore();
 
   const [showBulkAdd, setShowBulkAdd] = useState(false);
@@ -57,6 +58,18 @@ const PlayerManager: React.FC = () => {
       (player) => !player.locked
     );
     unlockedPlayers.forEach((player) => removePlayer(player.id));
+
+    // If no players remain, clear all teams
+    const remainingPlayers = players.filter(
+      (player) => player.locked
+    );
+    if (
+      remainingPlayers.length === 0 &&
+      typeof clearTeams === 'function'
+    ) {
+      clearTeams();
+    }
+
     setShowClearConfirm(false);
   };
 
@@ -132,9 +145,10 @@ const PlayerManager: React.FC = () => {
               <p className='text-sm text-red-700 dark:text-red-300 mt-1'>
                 This will remove all{' '}
                 {players.filter((p) => !p.locked).length} unlocked
-                players.
-                {players.filter((p) => p.locked).length > 0 &&
-                  ` Locked players will remain.`}
+                players
+                {players.filter((p) => p.locked).length > 0
+                  ? `. Locked players will remain.`
+                  : ` and clear all teams.`}
               </p>
             </div>
           </div>

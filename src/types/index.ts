@@ -41,6 +41,7 @@ export interface AppStore {
   loadHistoryEntry: (historyId: number) => void;
   clearAll: () => void;
   clearHistory: () => void;
+  clearTeams: () => void;
   toggleDarkMode: () => void;
   exportConfiguration: () => string;
   importConfiguration: (jsonData: string) => boolean;
