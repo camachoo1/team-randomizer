@@ -68,7 +68,7 @@ function App() {
                 size={16}
                 className='text-primary animate-pulse-subtle'
               />
-              <span>Teamify • Built by NotFaade</span>
+              <span>Teamify • Built by Fade</span>
               <Sparkles
                 size={16}
                 className='text-primary animate-pulse-subtle'
