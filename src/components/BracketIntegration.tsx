@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Trophy, Plus, X, ExternalLink, Info } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import clsx from 'clsx';

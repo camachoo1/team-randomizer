@@ -24,7 +24,7 @@ const useStore = create<AppStore>()(
       teams: [],
       teamSize: 2,
       history: [],
-      darkMode: false,
+      darkMode: true,
 
       // Actions
       setEventInfo: (eventName: string, organizerName: string) =>

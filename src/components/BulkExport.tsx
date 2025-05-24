@@ -20,14 +20,16 @@ export default function BulkExport() {
       return teams
         .map(
           (team) =>
-            `${team.name} (${team.players
+            `Team ${team?.players[0].name} (${team.players
               .map((p) => p.name)
               .join(', ')})`
         )
         .join('\n');
     } else {
       // Format: Just team names
-      return teams.map((team) => team.name).join('\n');
+      return teams
+        .map((team) => `Team ${team?.players[0].name}`)
+        .join('\n');
     }
   };
 

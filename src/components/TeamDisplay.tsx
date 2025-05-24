@@ -193,7 +193,7 @@ const TeamDisplay: React.FC = () => {
                              hover:text-primary transition-colors'
                     onClick={() => setEditingTeamId(team.id)}
                   >
-                    {team.name}
+                    {`Team ${team?.players[0].name}`}
                     <Edit2
                       size={14}
                       className='opacity-0 group-hover:opacity-50'
