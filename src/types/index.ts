@@ -1,8 +1,15 @@
+export interface SkillCategory {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface Player {
   id: number;
   name: string;
   locked: boolean;
   teamId: number | null;
+  skillLevel?: string; // Optional skill category ID
 }
 
 export interface Team {
@@ -28,10 +35,14 @@ export interface AppStore {
   teamSize: number;
   history: HistoryEntry[];
   darkMode: boolean;
+  skillBalancingEnabled: boolean;
+  skillCategories: SkillCategory[];
+  teamCompositionRules: { [categoryId: string]: number };
+  teamNamingCategoryId: string | null;
 
   // Actions
   setEventInfo: (eventName: string, organizerName: string) => void;
-  addPlayer: (playerName: string) => void;
+  addPlayer: (playerName: string, skillLevel?: string) => void;
   removePlayer: (playerId: number) => void;
   togglePlayerLock: (playerId: number) => void;
   setTeamSize: (size: number) => void;
@@ -45,6 +56,14 @@ export interface AppStore {
   toggleDarkMode: () => void;
   exportConfiguration: () => string;
   importConfiguration: (jsonData: string) => boolean;
+  toggleSkillBalancing: () => void;
+  addSkillCategory: (name: string, color: string) => void;
+  removeSkillCategory: (categoryId: string) => void;
+  updateSkillCategory: (categoryId: string, newName: string) => void;
+  updateTeamCompositionRules: (rules: {
+    [categoryId: string]: number;
+  }) => void;
+  updateTeamNamingCategory: (categoryId: string | null) => void;
 }
 
 // For when users download team data for later use

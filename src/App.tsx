@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 import Header from './components/Header';
 import EventSettings from './components/EventSettings';
-import PlayerManager from './components/PlayerManager';
+// import PlayerManager from './components/PlayerManager';
 import { Sparkles } from 'lucide-react';
 import useStore from './store/useStore';
-import ImportExport from './components/ImportExport';
 import TeamDisplay from './components/TeamDisplay';
 import History from './components/History';
-import BulkExport from './components/BulkExport';
 import BracketIntegration from './components/BracketIntegration';
+import Players from './components/Players';
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);
@@ -44,9 +43,8 @@ function App() {
           <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
             <div className='lg:col-span-1 space-y-6'>
               <EventSettings />
-              <PlayerManager />
-              <BulkExport />
-              <ImportExport />
+              {/* <PlayerManager /> */}
+              <Players />
               <History />
             </div>
 
