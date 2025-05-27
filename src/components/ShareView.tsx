@@ -385,6 +385,38 @@ const ShareView: React.FC = () => {
                 </div>
               )}
 
+              {/* Bracket Display */}
+              {selectedBracket && (
+                <div className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm'>
+                  <div className='flex items-center justify-between mb-6'>
+                    <h2 className='text-2xl font-bold'>
+                      {selectedBracket.t}
+                    </h2>
+                    <a
+                      href={selectedBracket.u.replace('/module', '')}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='flex items-center gap-2 text-sm text-primary hover:underline'
+                    >
+                      View on Challonge
+                      <ExternalLink size={14} />
+                    </a>
+                  </div>
+
+                  <div className='bg-gray-50 dark:bg-gray-900 rounded-xl p-2 -mx-2'>
+                    <iframe
+                      src={selectedBracket.u}
+                      width='100%'
+                      height='600'
+                      frameBorder='0'
+                      scrolling='auto'
+                      allowTransparency={true}
+                      className='rounded-lg'
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Teams Grid */}
               <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
                 {sharedData.t.map((team, index) => {
@@ -472,38 +504,6 @@ const ShareView: React.FC = () => {
                 })}
               </div>
             </div>
-
-            {/* Bracket Display */}
-            {selectedBracket && (
-              <div className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm'>
-                <div className='flex items-center justify-between mb-6'>
-                  <h2 className='text-2xl font-bold'>
-                    {selectedBracket.t}
-                  </h2>
-                  <a
-                    href={selectedBracket.u.replace('/module', '')}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='flex items-center gap-2 text-sm text-primary hover:underline'
-                  >
-                    View on Challonge
-                    <ExternalLink size={14} />
-                  </a>
-                </div>
-
-                <div className='bg-gray-50 dark:bg-gray-900 rounded-xl p-2 -mx-2'>
-                  <iframe
-                    src={selectedBracket.u}
-                    width='100%'
-                    height='600'
-                    frameBorder='0'
-                    scrolling='auto'
-                    allowTransparency={true}
-                    className='rounded-lg'
-                  />
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
