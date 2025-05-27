@@ -52,24 +52,30 @@ const PlayerManager: React.FC = () => {
     }
   };
 
+  // const handleClearAllPlayers = () => {
+  //   // Remove all unlocked players
+  //   const unlockedPlayers = players.filter(
+  //     (player) => !player.locked
+  //   );
+  //   unlockedPlayers.forEach((player) => removePlayer(player.id));
+
+  //   // If no players remain, clear all teams
+  //   const remainingPlayers = players.filter(
+  //     (player) => player.locked
+  //   );
+  //   if (
+  //     remainingPlayers.length === 0 &&
+  //     typeof clearTeams === 'function'
+  //   ) {
+  //     clearTeams();
+  //   }
+
+  //   setShowClearConfirm(false);
+  // };
+
   const handleClearAllPlayers = () => {
-    // Remove all unlocked players
-    const unlockedPlayers = players.filter(
-      (player) => !player.locked
-    );
-    unlockedPlayers.forEach((player) => removePlayer(player.id));
-
-    // If no players remain, clear all teams
-    const remainingPlayers = players.filter(
-      (player) => player.locked
-    );
-    if (
-      remainingPlayers.length === 0 &&
-      typeof clearTeams === 'function'
-    ) {
-      clearTeams();
-    }
-
+    players.forEach((p) => removePlayer(p.id));
+    clearTeams();
     setShowClearConfirm(false);
   };
 
@@ -144,11 +150,12 @@ const PlayerManager: React.FC = () => {
               </p>
               <p className='text-sm text-red-700 dark:text-red-300 mt-1'>
                 This will remove all{' '}
-                {players.filter((p) => !p.locked).length} unlocked
+                {/* {players.filter((p) => !p.locked).length} unlocked
                 players
                 {players.filter((p) => p.locked).length > 0
                   ? `. Locked players will remain.`
-                  : ` and clear all teams.`}
+                  : ` and clear all teams.`} */}
+                {players.length} players and clear all teams.
               </p>
             </div>
           </div>
@@ -251,7 +258,7 @@ const PlayerManager: React.FC = () => {
             max='10'
             value={teamSize}
             onChange={(e) =>
-              setTeamSize(parseInt(e.target.value) || 2)
+              setTeamSize(parseInt(e.target.value) || 1)
             }
             className='input-field w-24 text-center font-bold text-lg rounded-lg'
           />

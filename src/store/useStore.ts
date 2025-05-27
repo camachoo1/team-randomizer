@@ -22,7 +22,7 @@ const useStore = create<AppStore>()(
       organizerName: '',
       players: [],
       teams: [],
-      teamSize: 2,
+      teamSize: 1,
       history: [],
       darkMode: true,
 
@@ -177,7 +177,13 @@ const useStore = create<AppStore>()(
         const state = get();
         const entry = state.history.find((h) => h.id === historyId);
         if (entry) {
+          const allPlayers = entry.teams.flatMap((t) => t.players);
+          const uniquePlayers = allPlayers.filter(
+            (player, idx, arr) =>
+              arr.findIndex((p) => p.id === player.id) === idx
+          );
           set({
+            players: uniquePlayers,
             teams: JSON.parse(JSON.stringify(entry.teams)), // Deep clone
             eventName: entry.eventName,
             organizerName: entry.organizerName,
@@ -240,7 +246,7 @@ const useStore = create<AppStore>()(
             organizerName: data.organizerName || '',
             players: data.players || [],
             teams: data.teams || [],
-            teamSize: data.teamSize || 2,
+            teamSize: data.teamSize || 1,
           });
 
           return true;
