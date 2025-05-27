@@ -27,10 +27,10 @@ const defaultColors = [
   '#6B7280',
 ];
 
-const SkillSettingsModal: React.FC<SkillSettingsModalProps> = ({
+export default function SkillSettingsModal({
   isOpen,
   onClose,
-}) => {
+}: SkillSettingsModalProps) {
   const {
     skillCategories,
     addSkillCategory,
@@ -506,6 +506,4 @@ const SkillSettingsModal: React.FC<SkillSettingsModalProps> = ({
       </div>
     </div>
   );
-};
-
-export default SkillSettingsModal;
+}

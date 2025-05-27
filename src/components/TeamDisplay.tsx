@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   RefreshCw,
   Users,
@@ -12,7 +12,7 @@ import { Player } from '../types';
 import clsx from 'clsx';
 import PlayerCard from './PlayerCard';
 
-const TeamDisplay: React.FC = () => {
+export default function TeamDisplay() {
   const {
     teams,
     players,
@@ -325,6 +325,4 @@ const TeamDisplay: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default TeamDisplay;
+}

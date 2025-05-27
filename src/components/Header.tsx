@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Users,
   Moon,
@@ -13,7 +13,7 @@ import ImportExportModal from '../modals/ImportExportModal';
 import ChallongeExportModal from '../modals/BulkExportModal';
 import ShareModal from '../modals/ShareModal';
 
-const Header: React.FC = () => {
+export default function Header() {
   const {
     darkMode,
     toggleDarkMode,
@@ -153,6 +153,4 @@ const Header: React.FC = () => {
       />
     </>
   );
-};
-
-export default Header;
+}

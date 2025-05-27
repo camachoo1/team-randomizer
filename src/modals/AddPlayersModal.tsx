@@ -19,10 +19,10 @@ interface AddPlayersModalProps {
   onClose: () => void;
 }
 
-const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
+export default function AddPlayersModal({
   isOpen,
   onClose,
-}) => {
+}: AddPlayersModalProps) {
   const {
     players,
     addPlayer,
@@ -320,6 +320,4 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
       </div>
     </div>
   );
-};
-
-export default AddPlayersModal;
+}

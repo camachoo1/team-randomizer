@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Eye,
   Users,
@@ -38,7 +38,7 @@ interface SharedData {
   ts: number; // timestamp
 }
 
-const ShareView: React.FC = () => {
+export default function ShareView() {
   const [sharedData, setSharedData] = useState<SharedData | null>(
     null
   );
@@ -509,6 +509,4 @@ const ShareView: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default ShareView;
+}

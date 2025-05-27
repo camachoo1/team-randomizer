@@ -15,10 +15,10 @@ interface ChallongeExportModalProps {
   onClose: () => void;
 }
 
-const ChallongeExportModal: React.FC<ChallongeExportModalProps> = ({
+export default function ChallongeExportModal({
   isOpen,
   onClose,
-}) => {
+}: ChallongeExportModalProps) {
   const { teams, eventName } = useStore();
   const [copied, setCopied] = useState(false);
   const [includePlayerNames, setIncludePlayerNames] = useState(false);
@@ -288,6 +288,4 @@ const ChallongeExportModal: React.FC<ChallongeExportModalProps> = ({
       </div>
     </div>
   );
-};
-
-export default ChallongeExportModal;
+}

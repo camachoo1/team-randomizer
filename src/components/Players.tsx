@@ -19,7 +19,7 @@ import clsx from 'clsx';
 import AddPlayersModal from '../modals/AddPlayersModal';
 import SkillSettingsModal from '../modals/SkillSettingsModal';
 
-const PlayerManager: React.FC = () => {
+export default function Players() {
   const {
     players,
     removePlayer,
@@ -385,6 +385,4 @@ const PlayerManager: React.FC = () => {
       />
     </>
   );
-};
-
-export default PlayerManager;
+}

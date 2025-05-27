@@ -20,13 +20,13 @@ interface PlayerCardProps {
   onDragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({
+export default function PlayerCard({
   player,
   playerIndex,
   isDraggable,
   onDragStart,
   onDragEnd,
-}) => {
+}: PlayerCardProps) {
   const { players, skillBalancingEnabled, skillCategories } =
     useStore();
 
@@ -93,6 +93,4 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       </div>
     </div>
   );
-};
-
-export default PlayerCard;
+}

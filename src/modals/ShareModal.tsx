@@ -15,10 +15,10 @@ interface ShareModalProps {
   onClose: () => void;
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({
+export default function ShareModal({
   isOpen,
   onClose,
-}) => {
+}: ShareModalProps) {
   const {
     teams,
     eventName,
@@ -351,6 +351,4 @@ const ShareModal: React.FC<ShareModalProps> = ({
       </div>
     </div>
   );
-};
-
-export default ShareModal;
+}

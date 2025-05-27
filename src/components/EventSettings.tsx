@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calendar, User, Sparkles, Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import useStore from '../store/useStore';
@@ -9,7 +8,7 @@ interface EventForm {
   organizerName: string;
 }
 
-const EventSettings: React.FC = () => {
+export default function EventSettings() {
   const { eventName, organizerName, setEventInfo } = useStore();
 
   const {
@@ -75,6 +74,4 @@ const EventSettings: React.FC = () => {
       </form>
     </div>
   );
-};
-
-export default EventSettings;
+}

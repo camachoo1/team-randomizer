@@ -16,10 +16,10 @@ interface ImportExportModalProps {
   onClose: () => void;
 }
 
-const ImportExportModal: React.FC<ImportExportModalProps> = ({
+export default function ImportExportModal({
   isOpen,
   onClose,
-}) => {
+}: ImportExportModalProps) {
   const {
     eventName,
     exportConfiguration,
@@ -258,6 +258,4 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
       </div>
     </div>
   );
-};
-
-export default ImportExportModal;
+}
