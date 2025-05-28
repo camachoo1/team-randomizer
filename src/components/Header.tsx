@@ -101,6 +101,7 @@ export default function Header() {
                 <FileDown size={18} />
               </button>
 
+              {/* Share Button */}
               <button
                 onClick={() => setShowShare(true)}
                 disabled={teams.length === 0}
@@ -113,6 +114,15 @@ export default function Header() {
               >
                 <Share2 size={16} />
                 <span className='hidden md:inline'>Share</span>
+              </button>
+
+              {/* Mobile Share Button */}
+              <button
+                onClick={() => setShowImportExport(true)}
+                className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 transition-all duration-200'
+                title='Share'
+              >
+                <Share2 size={18} />
               </button>
 
               {/* Dark Mode Toggle */}

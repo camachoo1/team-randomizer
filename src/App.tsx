@@ -46,7 +46,7 @@ function App() {
   // Normal app view
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
-      <div className='gradient-bg min-h-screen transition-colors duration-500'>
+      <div className='gradient-bg min-h-screen transition-colors duration-200'>
         {/* Background decoration */}
         <div className='fixed inset-0 overflow-hidden pointer-events-none'>
           <div className='absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-subtle' />
