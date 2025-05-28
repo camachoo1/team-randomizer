@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   X,
   Share2,
@@ -6,6 +6,8 @@ import {
   CheckCircle,
   ExternalLink,
   Eye,
+  Link,
+  Loader2,
 } from 'lucide-react';
 import useStore from '../store/useStore';
 import clsx from 'clsx';
@@ -21,6 +23,7 @@ export default function ShareModal({
 }: ShareModalProps) {
   const {
     teams,
+    players,
     eventName,
     organizerName,
     skillCategories,
@@ -28,38 +31,51 @@ export default function ShareModal({
   } = useStore();
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
+  const [shortUrl, setShortUrl] = useState('');
+  const [isShortening, setIsShortening] = useState(false);
+  const [shorteningError, setShorteningError] = useState('');
 
   const generateShareUrl = useCallback(() => {
     // Get saved brackets from localStorage
     const savedBrackets = localStorage.getItem('saved-brackets');
     const brackets = savedBrackets ? JSON.parse(savedBrackets) : [];
+    const reservePlayers = players.filter((p) => p.isReserve);
 
     const shareData = {
-      e: eventName, // shortened keys
+      e: eventName,
       o: organizerName,
       t: teams.map((team) => ({
         n: team.name,
         p: team.players.map((player) => ({
           n: player.name,
-          s: player.skillLevel,
+          ...(player.skillLevel && { s: player.skillLevel }),
         })),
       })),
-      s: skillBalancingEnabled
-        ? skillCategories.map((cat) => ({
+      // Include reserve players if any exist
+      ...(reservePlayers.length > 0 && {
+        r: reservePlayers.map((player) => ({
+          n: player.name,
+          ...(player.skillLevel && { s: player.skillLevel }),
+        })),
+      }),
+      ...(skillBalancingEnabled &&
+        skillCategories.length > 0 && {
+          sc: skillCategories.map((cat) => ({
             i: cat.id,
             n: cat.name,
             c: cat.color,
-          }))
-        : [],
-      sb: skillBalancingEnabled,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      b: brackets.map((bracket: any) => ({
-        // Add brackets
-        i: bracket.id,
-        t: bracket.title,
-        u: bracket.embedUrl,
-      })),
-      ts: new Date().getTime(), // timestamp as number
+          })),
+          sb: true,
+        }),
+      ...(brackets.length > 0 && {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        b: brackets.map((bracket: any) => ({
+          i: bracket.id,
+          t: bracket.title,
+          u: bracket.embedUrl,
+        })),
+      }),
+      ts: Date.now(),
     };
 
     // Compress and encode the data
@@ -74,26 +90,67 @@ export default function ShareModal({
     eventName,
     organizerName,
     teams,
+    players,
     skillBalancingEnabled,
     skillCategories,
   ]);
 
+  const shortenUrl = async (longUrl: string) => {
+    setIsShortening(true);
+    setShorteningError('');
+
+    try {
+      // TinyURL API - completely free, no API key needed
+      const response = await fetch(
+        `https://tinyurl.com/api-create.php?url=${encodeURIComponent(
+          longUrl
+        )}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to shorten URL');
+      }
+
+      const shortUrl = await response.text();
+
+      // Validate that we got a proper TinyURL back
+      if (shortUrl.startsWith('https://tinyurl.com/')) {
+        setShortUrl(shortUrl);
+      } else {
+        throw new Error('Invalid response from TinyURL');
+      }
+    } catch (error) {
+      console.error('URL shortening failed:', error);
+      setShorteningError(
+        'Failed to create short URL. You can still use the full link below.'
+      );
+    } finally {
+      setIsShortening(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && teams.length > 0) {
-      setShareUrl(generateShareUrl());
+      const fullUrl = generateShareUrl();
+      setShareUrl(fullUrl);
+      setShortUrl(''); // Reset short URL
+      setShorteningError('');
+
+      // Automatically try to shorten the URL
+      shortenUrl(fullUrl);
     }
   }, [isOpen, generateShareUrl, teams]);
 
-  const handleCopy = async () => {
+  const handleCopy = async (urlToCopy: string) => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(urlToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
-      textArea.value = shareUrl;
+      textArea.value = urlToCopy;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
@@ -109,8 +166,10 @@ export default function ShareModal({
 
   const handleClose = useCallback(() => {
     setCopied(false);
+    setShortUrl('');
+    setShorteningError('');
     onClose();
-  }, [setCopied, onClose]);
+  }, [onClose]);
 
   // Handle ESC key press
   useEffect(() => {
@@ -134,6 +193,11 @@ export default function ShareModal({
     }
   };
 
+  // Calculate player counts
+  const activePlayers = players.filter((p) => !p.isReserve);
+  const reservePlayers = players.filter((p) => p.isReserve);
+  const totalPlayers = activePlayers.length + reservePlayers.length;
+
   if (!isOpen) return null;
 
   return (
@@ -147,7 +211,15 @@ export default function ShareModal({
             <div className='p-2.5 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-xl'>
               <Share2 className='text-primary' size={22} />
             </div>
-            <h2 className='text-xl font-bold'>Share Teams</h2>
+            <div>
+              <h2 className='text-xl font-bold'>Share Teams</h2>
+              {shortUrl && (
+                <p className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1'>
+                  <Link size={12} />
+                  Shortened with TinyURL
+                </p>
+              )}
+            </div>
           </div>
           <button
             onClick={handleClose}
@@ -185,28 +257,93 @@ export default function ShareModal({
                   />
                   <div>
                     <h3 className='font-semibold text-blue-800 dark:text-blue-200 mb-2'>
-                      Create a read-only share link
+                      Share your teams with a short link
                     </h3>
                     <ul className='text-blue-700 dark:text-blue-300 space-y-1 text-sm'>
+                      <li>
+                        • Automatically shortened with TinyURL for
+                        easy sharing
+                      </li>
                       <li>
                         • Others can view your teams but cannot edit
                         them
                       </li>
                       <li>
-                        • Link includes team composition and skill
-                        categories
+                        • Includes team composition, skill categories,
+                        and reserves
                       </li>
                       <li>
                         • No account or sign-up required for viewers
-                      </li>
-                      <li>
-                        • Link works as long as you don't change your
-                        teams
                       </li>
                     </ul>
                   </div>
                 </div>
               </div>
+
+              {/* Short URL Section */}
+              {(shortUrl || isShortening) && (
+                <div>
+                  <h3 className='font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2'>
+                    <Link size={18} />
+                    Short Link:
+                    {isShortening && (
+                      <Loader2
+                        size={14}
+                        className='animate-spin text-primary'
+                      />
+                    )}
+                  </h3>
+
+                  {isShortening ? (
+                    <div className='bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border flex items-center gap-3'>
+                      <Loader2
+                        size={20}
+                        className='animate-spin text-primary'
+                      />
+                      <span className='text-gray-600 dark:text-gray-400'>
+                        Creating short URL with TinyURL...
+                      </span>
+                    </div>
+                  ) : shortUrl ? (
+                    <div className='relative'>
+                      <div className='bg-green-50 dark:bg-green-900/20 rounded-lg p-4 pr-16 border border-green-200 dark:border-green-800 font-mono text-sm break-all'>
+                        {shortUrl}
+                      </div>
+                      <button
+                        onClick={() => handleCopy(shortUrl)}
+                        className={clsx(
+                          'absolute top-1/2 right-3 -translate-y-1/2 px-3 py-1.5 rounded-lg text-sm font-medium',
+                          'transition-all duration-200 flex items-center gap-2 shadow-sm',
+                          copied
+                            ? 'bg-green-600 text-white'
+                            : 'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                        )}
+                      >
+                        {copied ? (
+                          <>
+                            <CheckCircle size={14} />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Error message */}
+              {shorteningError && (
+                <div className='p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800'>
+                  <p className='text-yellow-800 dark:text-yellow-200 text-sm'>
+                    {shorteningError}
+                  </p>
+                </div>
+              )}
 
               {/* Share Preview */}
               <div>
@@ -241,82 +378,69 @@ export default function ShareModal({
                     </div>
                     <div className='flex justify-between'>
                       <span className='text-gray-600 dark:text-gray-400'>
-                        Players:
+                        Active Players:
                       </span>
                       <span className='font-medium'>
-                        {teams.reduce(
-                          (total, team) =>
-                            total + team.players.length,
-                          0
-                        )}
+                        {activePlayers.length}
                       </span>
                     </div>
-                    {skillBalancingEnabled && (
+                    {reservePlayers.length > 0 && (
                       <div className='flex justify-between'>
                         <span className='text-gray-600 dark:text-gray-400'>
-                          Skill Categories:
+                          Reserve Players:
                         </span>
-                        <span className='font-medium'>
-                          {skillCategories.length}
+                        <span className='font-medium text-orange-600'>
+                          {reservePlayers.length}
                         </span>
                       </div>
                     )}
-                    {(() => {
-                      const savedBrackets =
-                        localStorage.getItem('saved-brackets');
-                      const brackets = savedBrackets
-                        ? JSON.parse(savedBrackets)
-                        : [];
-                      return (
-                        brackets.length > 0 && (
-                          <div className='flex justify-between'>
-                            <span className='text-gray-600 dark:text-gray-400'>
-                              Brackets:
-                            </span>
-                            <span className='font-medium'>
-                              {brackets.length}
-                            </span>
-                          </div>
-                        )
-                      );
-                    })()}
+                    <div className='flex justify-between'>
+                      <span className='text-gray-600 dark:text-gray-400'>
+                        Total Players:
+                      </span>
+                      <span className='font-medium text-primary'>
+                        {totalPlayers}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Share URL */}
-              <div>
-                <h3 className='font-semibold text-gray-900 dark:text-gray-100 mb-3'>
-                  Share Link:
-                </h3>
-                <div className='relative'>
-                  <div className='bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border font-mono text-sm break-all'>
-                    {shareUrl}
+              {/* Full URL (fallback) */}
+              {(shorteningError || !shortUrl) && (
+                <div>
+                  <h3 className='font-semibold text-gray-900 dark:text-gray-100 mb-3'>
+                    Full Share Link:
+                  </h3>
+                  <div className='relative'>
+                    <div className='bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 pr-16 border font-mono text-sm break-all'>
+                      {shareUrl}
+                    </div>
+                    <button
+                      onClick={() => handleCopy(shareUrl)}
+                      className={clsx(
+                        'absolute top-1/2 right-3 -translate-y-1/2 px-3 py-1.5 rounded-lg text-sm font-medium',
+                        'transition-all duration-200 flex items-center gap-2 shadow-sm',
+                        copied
+                          ? 'bg-green-600 text-white'
+                          : 'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                      )}
+                    >
+                      {copied ? (
+                        <>
+                          <CheckCircle size={14} />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} />
+                          Copy
+                        </>
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={handleCopy}
-                    className={clsx(
-                      'absolute top-3 right-3 px-3 py-2 rounded-lg text-sm font-medium',
-                      'transition-all duration-200 flex items-center gap-2 shadow-sm',
-                      copied
-                        ? 'bg-green-600 text-white'
-                        : 'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
-                    )}
-                  >
-                    {copied ? (
-                      <>
-                        <CheckCircle size={16} />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={16} />
-                        Copy
-                      </>
-                    )}
-                  </button>
                 </div>
-              </div>
+              )}
 
               {/* Actions */}
               <div className='flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700'>
@@ -328,21 +452,22 @@ export default function ShareModal({
                   Preview Link
                 </button>
                 <button
-                  onClick={handleCopy}
+                  onClick={() => handleCopy(shortUrl || shareUrl)}
                   className='btn-primary flex items-center gap-2 flex-1'
                 >
                   <Copy size={16} />
-                  Copy Link
+                  Copy {shortUrl ? 'Short' : ''} Link
                 </button>
               </div>
 
-              {/* Warning */}
-              <div className='p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-sm'>
-                <p className='text-yellow-800 dark:text-yellow-200'>
-                  <strong>Note:</strong> This link contains your team
-                  data. If you make changes to your teams, you'll need
-                  to generate a new share link for others to see the
-                  updates.
+              {/* Note */}
+              <div className='p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 text-sm'>
+                <p className='text-blue-800 dark:text-blue-200'>
+                  <strong>How it works:</strong> Your team data is
+                  compressed and embedded in the URL. TinyURL creates
+                  a short alias that redirects to your full link,
+                  making it perfect for sharing on social media or
+                  messaging apps.
                 </p>
               </div>
             </div>

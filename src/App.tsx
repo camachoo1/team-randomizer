@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import Header from './components/Header';
 import EventSettings from './components/EventSettings';
-import Players from './components/Players';
-import { Sparkles } from 'lucide-react';
 import useStore from './store/useStore';
-import TeamDisplay from './components/TeamDisplay';
 import History from './components/History';
 import BracketIntegration from './components/BracketIntegration';
 import ShareView from './components/ShareView';
+import PlayerDisplay from './components/players/PlayerDisplay';
+import TeamDisplay from './components/teams/TeamDisplay';
+import Footer from './components/Footer';
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);
@@ -63,7 +63,7 @@ function App() {
           <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
             <div className='lg:col-span-1 space-y-6'>
               <EventSettings />
-              <Players />
+              <PlayerDisplay />
               <History />
             </div>
             <div className='lg:col-span-2 space-y-6'>
@@ -74,21 +74,7 @@ function App() {
         </main>
 
         {/* Footer */}
-        <footer className='relative mt-auto py-8 text-center'>
-          <div className='container mx-auto px-4'>
-            <div className='flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400'>
-              <Sparkles
-                size={16}
-                className='text-primary animate-pulse-subtle'
-              />
-              <span>Teamify • Built by Fade</span>
-              <Sparkles
-                size={16}
-                className='text-primary animate-pulse-subtle'
-              />
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

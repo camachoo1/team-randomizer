@@ -6,6 +6,7 @@ import {
   HistoryEntry,
   ExportData,
   SkillCategory,
+  Player,
 } from '../types';
 
 // Default skill categories
@@ -43,12 +44,38 @@ const useStore = create<AppStore>()(
       skillCategories: defaultSkillCategories,
       teamCompositionRules: {},
       teamNamingCategoryId: null,
+      maxTeams: 0, // 0 means no limit
+      reservePlayersEnabled: false,
 
       // Actions
       setEventInfo: (eventName: string, organizerName: string) =>
         set({ eventName, organizerName }),
 
-      addPlayer: (playerName: string, skillLevel?: string) =>
+      setMaxTeams: (count: number) => set({ maxTeams: count }),
+
+      toggleReserveMode: () =>
+        set((state) => ({
+          reservePlayersEnabled: !state.reservePlayersEnabled,
+        })),
+
+      togglePlayerReserve: (playerId: number) =>
+        set((state) => ({
+          players: state.players.map((p) =>
+            p.id === playerId
+              ? {
+                  ...p,
+                  isReserve: !p.isReserve,
+                  teamId: p.isReserve ? p.teamId : null,
+                }
+              : p
+          ),
+        })),
+
+      addPlayer: (
+        playerName: string,
+        skillLevel?: string,
+        isReserve: boolean = false
+      ) =>
         set((state) => ({
           players: [
             ...state.players,
@@ -58,8 +85,33 @@ const useStore = create<AppStore>()(
               locked: false,
               teamId: null,
               skillLevel: skillLevel || undefined,
+              isReserve,
             },
           ],
+        })),
+
+      updatePlayer: (
+        playerId: number,
+        updates: Partial<
+          Pick<Player, 'name' | 'skillLevel' | 'isReserve'>
+        >
+      ) =>
+        set((state) => ({
+          players: state.players.map((p) =>
+            p.id === playerId
+              ? {
+                  ...p,
+                  ...updates,
+                  // If changing to/from reserve, handle teamId appropriately
+                  teamId:
+                    updates.isReserve !== undefined
+                      ? updates.isReserve
+                        ? null
+                        : p.teamId
+                      : p.teamId,
+                }
+              : p
+          ),
         })),
 
       removePlayer: (playerId: number) =>
@@ -135,36 +187,61 @@ const useStore = create<AppStore>()(
         const state = get();
         if (state.players.length === 0) return;
 
+        // Filter out reserve players from team assignment
+        const activePlayers = state.players.filter(
+          (p) => !p.isReserve
+        );
+
+        if (activePlayers.length === 0) return;
+
         let newTeams: Team[] = [];
+        let numTeams: number;
+
+        // Calculate number of teams based on maxTeams setting
+        if (state.maxTeams > 0) {
+          // Use the specified max teams
+          numTeams = state.maxTeams;
+
+          // Ensure we don't create more teams than we have players for
+          const minTeamsNeeded = Math.ceil(
+            activePlayers.length / state.teamSize
+          );
+          if (numTeams > minTeamsNeeded) {
+            console.warn(
+              `Reducing teams from ${numTeams} to ${minTeamsNeeded} based on player count`
+            );
+            numTeams = minTeamsNeeded;
+          }
+        } else {
+          // Original calculation
+          numTeams = Math.ceil(activePlayers.length / state.teamSize);
+        }
 
         if (
           state.skillBalancingEnabled &&
           state.skillCategories.length > 0
         ) {
-          // Skill-balanced randomization with composition rules
+          // Skill-balanced randomization (only for active players)
           const rules = state.teamCompositionRules;
           const hasRules = Object.keys(rules).length > 0;
 
-          // Group players by skill level
-          const skillGroups: { [key: string]: typeof state.players } =
+          // Group active players by skill level
+          const skillGroups: { [key: string]: typeof activePlayers } =
             {};
           state.skillCategories.forEach((category) => {
-            skillGroups[category.id] = state.players
+            skillGroups[category.id] = activePlayers
               .filter(
                 (p) => p.skillLevel === category.id && !p.locked
               )
-              .sort(() => Math.random() - 0.5); // Shuffle each group
+              .sort(() => Math.random() - 0.5);
           });
 
-          // Add unassigned players
-          skillGroups['unassigned'] = state.players
+          skillGroups['unassigned'] = activePlayers
             .filter((p) => !p.skillLevel && !p.locked)
             .sort(() => Math.random() - 0.5);
 
-          // Calculate number of teams
-          let numTeams: number;
-          if (hasRules) {
-            // Calculate based on the most restrictive rule
+          // Recalculate teams if composition rules would create more teams than maxTeams
+          if (hasRules && state.maxTeams > 0) {
             const maxTeamsPerCategory = Object.entries(rules)
               .map(([categoryId, count]) => {
                 const availablePlayers =
@@ -175,49 +252,30 @@ const useStore = create<AppStore>()(
               })
               .filter((count) => count !== Infinity);
 
-            numTeams =
-              maxTeamsPerCategory.length > 0
-                ? Math.min(
-                    ...maxTeamsPerCategory,
-                    Math.ceil(state.players.length / state.teamSize)
-                  )
-                : Math.ceil(state.players.length / state.teamSize);
-          } else {
-            // Fallback to original calculation
-            const maxGroupSize = Math.max(
-              ...Object.values(skillGroups).map(
-                (group) => group.length
-              )
-            );
-            numTeams = Math.max(
-              1,
-              Math.ceil(
-                maxGroupSize /
-                  Math.max(
-                    1,
-                    Math.floor(
-                      state.teamSize / state.skillCategories.length
-                    )
-                  )
-              )
-            );
+            if (maxTeamsPerCategory.length > 0) {
+              const calculatedTeams = Math.min(
+                ...maxTeamsPerCategory
+              );
+              if (calculatedTeams < numTeams) {
+                numTeams = Math.max(1, calculatedTeams);
+              }
+            }
           }
 
-          // Create empty teams with temporary names
+          // Create empty teams
           newTeams = Array.from({ length: numTeams }, (_, i) => ({
             id: Date.now() + i,
-            name: `Team ${i + 1}`, // Temporary name, will be updated later if custom naming is enabled
+            name: `Team ${i + 1}`,
             players: [],
           }));
 
-          // Apply composition rules if they exist
+          // Apply composition rules or balanced distribution
           if (hasRules) {
-            // First pass: fill required spots according to rules
+            // Apply composition rules
             Object.entries(rules).forEach(
               ([categoryId, requiredCount]) => {
                 if (requiredCount > 0 && skillGroups[categoryId]) {
                   const playersInCategory = skillGroups[categoryId];
-
                   for (
                     let teamIndex = 0;
                     teamIndex < numTeams;
@@ -242,11 +300,10 @@ const useStore = create<AppStore>()(
               }
             );
 
-            // Second pass: fill remaining spots with any available players
+            // Fill remaining spots
             const remainingPlayers =
               Object.values(skillGroups).flat();
             remainingPlayers.forEach((player) => {
-              // Find team with fewest players
               const teamIndex = newTeams.reduce(
                 (minIdx, team, idx) =>
                   team.players.length <
@@ -266,7 +323,7 @@ const useStore = create<AppStore>()(
               }
             });
           } else {
-            // Original balanced distribution without specific rules
+            // Balanced distribution
             Object.values(skillGroups).forEach((skillGroup) => {
               skillGroup.forEach((player, index) => {
                 const teamIndex = index % numTeams;
@@ -278,37 +335,37 @@ const useStore = create<AppStore>()(
             });
           }
 
-          // Add locked players to their existing teams if possible
-          const lockedPlayers = state.players.filter((p) => p.locked);
-          lockedPlayers.forEach((player) => {
+          // Add locked active players
+          const lockedActivePlayers = activePlayers.filter(
+            (p) => p.locked
+          );
+          lockedActivePlayers.forEach((player) => {
             if (player.teamId !== null && player.teamId < numTeams) {
               newTeams[player.teamId].players.push(player);
             } else {
-              // If locked player's team doesn't exist, add to first team
               newTeams[0].players.push({ ...player, teamId: 0 });
             }
           });
         } else {
-          // Standard randomization (existing logic)
-          const unlockedPlayers = state.players.filter(
+          // Standard randomization (only for active players)
+          const unlockedActivePlayers = activePlayers.filter(
             (p) => !p.locked
           );
-          const lockedPlayers = state.players.filter((p) => p.locked);
-          const shuffled = [...unlockedPlayers].sort(
-            () => Math.random() - 0.5
+          const lockedActivePlayers = activePlayers.filter(
+            (p) => p.locked
           );
-          const numTeams = Math.ceil(
-            state.players.length / state.teamSize
+          const shuffled = [...unlockedActivePlayers].sort(
+            () => Math.random() - 0.5
           );
 
           newTeams = Array.from({ length: numTeams }, (_, i) => ({
             id: Date.now() + i,
-            name: `Team ${i + 1}`, // Temporary name, will be updated later if custom naming is enabled
+            name: `Team ${i + 1}`,
             players: [],
           }));
 
           // Place locked players first
-          lockedPlayers.forEach((player) => {
+          lockedActivePlayers.forEach((player) => {
             if (player.teamId !== null && player.teamId < numTeams) {
               newTeams[player.teamId].players.push(player);
             }
@@ -330,13 +387,12 @@ const useStore = create<AppStore>()(
           });
         }
 
-        // Apply custom team naming if enabled
+        // Apply custom team naming
         if (
           state.teamNamingCategoryId &&
           state.skillBalancingEnabled
         ) {
           newTeams = newTeams.map((team, index) => {
-            // Find the first player in the team with the selected skill category
             const namingPlayer = team.players.find((player) => {
               const playerData = state.players.find(
                 (p) => p.id === player.id
@@ -346,23 +402,21 @@ const useStore = create<AppStore>()(
               );
             });
 
-            if (namingPlayer) {
-              return {
-                ...team,
-                name: `Team ${namingPlayer.name}`,
-              };
-            } else {
-              // Fallback to standard naming if no player from the selected category is found
-              return {
-                ...team,
-                name: `Team ${index + 1}`,
-              };
-            }
+            return {
+              ...team,
+              name: namingPlayer
+                ? `Team ${namingPlayer.name}`
+                : `Team ${index + 1}`,
+            };
           });
         }
 
-        // Update player teamIds
+        // Update player teamIds (including reserves)
         const updatedPlayers = state.players.map((player) => {
+          if (player.isReserve) {
+            return { ...player, teamId: null }; // Keep reserves unassigned
+          }
+
           const team = newTeams.find((t) =>
             t.players.some((p) => p.id === player.id)
           );
@@ -376,7 +430,8 @@ const useStore = create<AppStore>()(
         const historyEntry: HistoryEntry = {
           id: Date.now(),
           timestamp: new Date().toISOString(),
-          teams: JSON.parse(JSON.stringify(newTeams)), // Deep clone
+          players: updatedPlayers,
+          teams: JSON.parse(JSON.stringify(newTeams)),
           eventName: state.eventName,
           organizerName: state.organizerName,
         };
@@ -424,16 +479,43 @@ const useStore = create<AppStore>()(
         const state = get();
         const entry = state.history.find((h) => h.id === historyId);
         if (entry) {
-          const allPlayers = entry.teams.flatMap((t) => t.players);
-          const uniquePlayers = allPlayers.filter(
-            (player, idx, arr) =>
-              arr.findIndex((p) => p.id === player.id) === idx
-          );
+          // Use the saved players array if available (new format)
+          // Fall back to extracting from teams for backward compatibility
+          let playersToRestore: Player[];
+
+          if (entry.players) {
+            // New format: use saved players array (includes reserves)
+            playersToRestore = entry.players;
+          } else {
+            // Old format: extract players from teams (backward compatibility)
+            const allPlayers = entry.teams.flatMap((t) => t.players);
+            playersToRestore = allPlayers.filter(
+              (player, idx, arr) =>
+                arr.findIndex((p) => p.id === player.id) === idx
+            );
+          }
+
           set({
-            players: uniquePlayers,
+            players: playersToRestore,
             teams: JSON.parse(JSON.stringify(entry.teams)), // Deep clone
             eventName: entry.eventName,
             organizerName: entry.organizerName,
+            // Restore additional settings if available
+            ...(entry.maxTeams !== undefined && {
+              maxTeams: entry.maxTeams,
+            }),
+            ...(entry.reservePlayersEnabled !== undefined && {
+              reservePlayersEnabled: entry.reservePlayersEnabled,
+            }),
+            ...(entry.skillBalancingEnabled !== undefined && {
+              skillBalancingEnabled: entry.skillBalancingEnabled,
+            }),
+            ...(entry.skillCategories && {
+              skillCategories: entry.skillCategories,
+            }),
+            ...(entry.teamCompositionRules && {
+              teamCompositionRules: entry.teamCompositionRules,
+            }),
           });
         }
       },

@@ -22,15 +22,27 @@ interface SharedData {
   e: string; // eventName
   o: string; // organizerName
   t: SharedTeam[]; // teams
-  s: Array<{
-    // skillCategories
+  r?: Array<{
+    // reserve players (optional)
+    n: string; // name
+    s?: string; // skillLevel
+  }>;
+  // Handle both old and new formats for skill categories
+  s?: Array<{
+    // OLD format - skillCategories
+    i: string; // id
+    n: string; // name
+    c: string; // color
+  }>;
+  sc?: Array<{
+    // NEW format - skillCategories (compact)
     i: string; // id
     n: string; // name
     c: string; // color
   }>;
   sb: boolean; // skillBalancingEnabled
-  b: Array<{
-    // brackets
+  b?: Array<{
+    // brackets (optional)
     i: string; // id
     t: string; // title
     u: string; // embedUrl
@@ -50,9 +62,18 @@ export default function ShareView() {
   useEffect(() => {
     const checkForShareData = () => {
       const hash = window.location.hash;
+      console.log('ShareView checking hash:', hash);
+      console.log('Full URL:', window.location.href);
+
       if (hash.startsWith('#share=')) {
         setIsShareView(true);
         const encodedData = hash.replace('#share=', '');
+        console.log('Encoded data length:', encodedData.length);
+        console.log(
+          'Encoded data preview:',
+          encodedData.substring(0, 100) + '...'
+        );
+
         try {
           // Decode URL-safe base64
           const normalizedData = encodedData.replace(
@@ -63,16 +84,23 @@ export default function ShareView() {
             normalizedData +
             '='.repeat((4 - (normalizedData.length % 4)) % 4);
           const decodedData = atob(paddedData);
+          console.log('Decoded data:', decodedData);
+
           const parsedData = JSON.parse(decodedData) as SharedData;
+          console.log('Parsed data:', parsedData);
+
           setSharedData(parsedData);
+
           // Set first bracket as selected if any exist
           if (parsedData.b && parsedData.b.length > 0) {
             setSelectedBracket(parsedData.b[0]);
           }
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
+          console.error('Decode error:', err);
           setError('Invalid or corrupted share link');
         }
+      } else {
+        console.log('No share hash found');
       }
     };
 
@@ -83,27 +111,45 @@ export default function ShareView() {
   }, []);
 
   const getSkillCategoryInfo = (skillCategoryId?: string) => {
-    return sharedData?.s.find((cat) => cat.i === skillCategoryId);
+    if (!sharedData) return undefined;
+
+    // Use either the new format (sc) or old format (s)
+    const skillCategories = sharedData.sc || sharedData.s || [];
+    return skillCategories.find((cat) => cat.i === skillCategoryId);
   };
 
   const getSkillCategoryCounts = () => {
-    if (!sharedData?.sb || !sharedData?.s) return [];
+    if (!sharedData?.sb) return [];
 
-    return sharedData.s.map((category) => ({
+    // Use either the new format (sc) or old format (s)
+    const skillCategories = sharedData.sc || sharedData.s || [];
+
+    if (skillCategories.length === 0) return [];
+
+    return skillCategories.map((category) => ({
       ...category,
-      count: sharedData.t.reduce(
-        (total, team) =>
-          total + team.p.filter((p) => p.s === category.i).length,
-        0
-      ),
+      count:
+        // Count players in teams
+        sharedData.t.reduce(
+          (total, team) =>
+            total + team.p.filter((p) => p.s === category.i).length,
+          0
+        ) +
+        // Count reserve players
+        (sharedData.r?.filter((p) => p.s === category.i).length || 0),
     }));
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getTeamSkillDistribution = (teamPlayers: any[]) => {
-    if (!sharedData?.sb || !sharedData?.s) return null;
+    if (!sharedData?.sb) return null;
 
-    const distribution = sharedData.s
+    // Use either the new format (sc) or old format (s)
+    const skillCategories = sharedData.sc || sharedData.s || [];
+
+    if (skillCategories.length === 0) return null;
+
+    const distribution = skillCategories
       .map((category) => ({
         ...category,
         count: teamPlayers.filter((p) => p.s === category.i).length,
@@ -256,13 +302,34 @@ export default function ShareView() {
                 </div>
                 <div className='flex justify-between'>
                   <span className='text-gray-600 dark:text-gray-400'>
-                    Players
+                    Active Players
                   </span>
                   <span className='font-bold text-xl'>
                     {sharedData.t.reduce(
                       (total, team) => total + team.p.length,
                       0
                     )}
+                  </span>
+                </div>
+                {sharedData.r && sharedData.r.length > 0 && (
+                  <div className='flex justify-between'>
+                    <span className='text-gray-600 dark:text-gray-400'>
+                      Reserve Players
+                    </span>
+                    <span className='font-bold text-xl text-orange-600'>
+                      {sharedData.r.length}
+                    </span>
+                  </div>
+                )}
+                <div className='flex justify-between'>
+                  <span className='text-gray-600 dark:text-gray-400'>
+                    Total Players
+                  </span>
+                  <span className='font-bold text-xl text-primary'>
+                    {sharedData.t.reduce(
+                      (total, team) => total + team.p.length,
+                      0
+                    ) + (sharedData.r?.length || 0)}
                   </span>
                 </div>
                 <div className='flex justify-between'>
@@ -282,35 +349,42 @@ export default function ShareView() {
             </div>
 
             {/* Skill Distribution */}
-            {sharedData.sb && sharedData.s.length > 0 && (
-              <div className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm'>
-                <h2 className='text-lg font-bold mb-4 flex items-center gap-2'>
-                  <Award size={20} className='text-primary' />
-                  Skill Distribution
-                </h2>
-                <div className='space-y-3'>
-                  {getSkillCategoryCounts().map((category) => (
-                    <div
-                      key={category.i}
-                      className='flex items-center justify-between'
-                    >
-                      <div className='flex items-center gap-2'>
+            {(() => {
+              const skillCategories = sharedData.sc || sharedData.s;
+              return (
+                sharedData.sb &&
+                skillCategories &&
+                skillCategories.length > 0 && (
+                  <div className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm'>
+                    <h2 className='text-lg font-bold mb-4 flex items-center gap-2'>
+                      <Award size={20} className='text-primary' />
+                      Skill Distribution
+                    </h2>
+                    <div className='space-y-3'>
+                      {getSkillCategoryCounts().map((category) => (
                         <div
-                          className='w-3 h-3 rounded-full'
-                          style={{ backgroundColor: category.c }}
-                        />
-                        <span className='text-sm font-medium'>
-                          {category.n}
-                        </span>
-                      </div>
-                      <span className='font-bold'>
-                        {category.count}
-                      </span>
+                          key={category.i}
+                          className='flex items-center justify-between'
+                        >
+                          <div className='flex items-center gap-2'>
+                            <div
+                              className='w-3 h-3 rounded-full'
+                              style={{ backgroundColor: category.c }}
+                            />
+                            <span className='text-sm font-medium'>
+                              {category.n}
+                            </span>
+                          </div>
+                          <span className='font-bold'>
+                            {category.count}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                )
+              );
+            })()}
 
             {/* Brackets List */}
             {sharedData.b && sharedData.b.length > 0 && (
@@ -358,36 +432,43 @@ export default function ShareView() {
               </div>
 
               {/* Skill Legend */}
-              {sharedData.sb && sharedData.s.length > 0 && (
-                <div className='mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800'>
-                  <div className='flex items-center gap-2 mb-3'>
-                    <Award size={16} className='text-blue-600' />
-                    <h3 className='font-semibold text-blue-900 dark:text-blue-100'>
-                      Skill Categories
-                    </h3>
-                  </div>
-                  <div className='flex flex-wrap gap-3'>
-                    {sharedData.s.map((category) => (
-                      <div
-                        key={category.i}
-                        className='flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-800 rounded-full'
-                      >
-                        <div
-                          className='w-3 h-3 rounded-full'
-                          style={{ backgroundColor: category.c }}
-                        />
-                        <span className='text-sm font-medium'>
-                          {category.n}
-                        </span>
+              {(() => {
+                const skillCategories = sharedData.sc || sharedData.s;
+                return (
+                  sharedData.sb &&
+                  skillCategories &&
+                  skillCategories.length > 0 && (
+                    <div className='mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800'>
+                      <div className='flex items-center gap-2 mb-3'>
+                        <Award size={16} className='text-blue-600' />
+                        <h3 className='font-semibold text-blue-900 dark:text-blue-100'>
+                          Skill Categories Legend
+                        </h3>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                      <div className='flex flex-wrap gap-3'>
+                        {skillCategories.map((category) => (
+                          <div
+                            key={category.i}
+                            className='flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-800 rounded-full'
+                          >
+                            <div
+                              className='w-3 h-3 rounded-full'
+                              style={{ backgroundColor: category.c }}
+                            />
+                            <span className='text-sm font-medium'>
+                              {category.n}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                );
+              })()}
 
               {/* Bracket Display */}
               {selectedBracket && (
-                <div className='bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm'>
+                <div className='mb-6 bg-gray-50 dark:bg-gray-900 rounded-xl p-6 shadow-sm'>
                   <div className='flex items-center justify-between mb-6'>
                     <h2 className='text-2xl font-bold'>
                       {selectedBracket.t}
@@ -403,7 +484,7 @@ export default function ShareView() {
                     </a>
                   </div>
 
-                  <div className='bg-gray-50 dark:bg-gray-900 rounded-xl p-2 -mx-2'>
+                  <div className='bg-white dark:bg-gray-800 rounded-xl p-2 -mx-2'>
                     <iframe
                       src={selectedBracket.u}
                       width='100%'
@@ -460,7 +541,7 @@ export default function ShareView() {
                           </div>
                         )}
 
-                      {/* Players */}
+                      {/* Players - Updated to match clean design */}
                       <div className='space-y-2'>
                         {team.p.map((player, playerIndex) => {
                           const skillInfo = getSkillCategoryInfo(
@@ -470,31 +551,25 @@ export default function ShareView() {
                           return (
                             <div
                               key={playerIndex}
-                              className='p-3 bg-white dark:bg-gray-800 rounded-xl flex items-center gap-3'
+                              className='p-3.5 bg-white dark:bg-gray-800 rounded-xl transition-all duration-200'
                             >
-                              {skillInfo && (
-                                <div
-                                  className='w-3 h-3 rounded-full flex-shrink-0'
-                                  style={{
-                                    backgroundColor: skillInfo.c,
-                                  }}
-                                  title={skillInfo.n}
-                                />
-                              )}
-                              <span className='font-medium'>
-                                {player.n}
-                              </span>
-                              {skillInfo && (
-                                <span
-                                  className='text-xs px-2 py-0.5 rounded-full font-medium text-white ml-auto'
-                                  style={{
-                                    backgroundColor:
-                                      skillInfo.c + '80',
-                                  }}
-                                >
-                                  {skillInfo.n}
+                              <div className='flex items-center gap-3'>
+                                {/* Skill Level Indicator - Just the dot, no text badge */}
+                                {skillInfo && (
+                                  <div
+                                    className='w-3 h-3 rounded-full flex-shrink-0'
+                                    style={{
+                                      backgroundColor: skillInfo.c,
+                                    }}
+                                    title={skillInfo.n} // Keep tooltip for accessibility
+                                  />
+                                )}
+
+                                {/* Player Name */}
+                                <span className='font-medium select-none truncate'>
+                                  {player.n}
                                 </span>
-                              )}
+                              </div>
                             </div>
                           );
                         })}

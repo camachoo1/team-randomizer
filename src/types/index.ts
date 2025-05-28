@@ -10,6 +10,7 @@ export interface Player {
   locked: boolean;
   teamId: number | null;
   skillLevel?: string; // Optional skill category ID
+  isReserve?: boolean;
 }
 
 export interface Team {
@@ -21,9 +22,17 @@ export interface Team {
 export interface HistoryEntry {
   id: number;
   timestamp: string;
+  players: Player[];
   teams: Team[];
   eventName: string;
   organizerName: string;
+  maxTeams?: number;
+  teamSize?: number;
+  reservePlayersEnabled?: boolean;
+  skillBalancingEnabled?: boolean;
+  skillCategories?: SkillCategory[];
+  teamCompositionRules?: { [categoryId: string]: number };
+  teamNamingCategoryId?: string | null;
 }
 
 export interface AppStore {
@@ -33,6 +42,8 @@ export interface AppStore {
   players: Player[];
   teams: Team[];
   teamSize: number;
+  maxTeams: number;
+  reservePlayersEnabled: boolean;
   history: HistoryEntry[];
   darkMode: boolean;
   skillBalancingEnabled: boolean;
@@ -42,7 +53,17 @@ export interface AppStore {
 
   // Actions
   setEventInfo: (eventName: string, organizerName: string) => void;
-  addPlayer: (playerName: string, skillLevel?: string) => void;
+  addPlayer: (
+    playerName: string,
+    skillLevel?: string,
+    isReserve?: boolean
+  ) => void;
+  updatePlayer: (
+    playerId: number,
+    updates: Partial<
+      Pick<Player, 'name' | 'skillLevel' | 'isReserve'>
+    >
+  ) => void;
   removePlayer: (playerId: number) => void;
   togglePlayerLock: (playerId: number) => void;
   setTeamSize: (size: number) => void;
@@ -64,6 +85,9 @@ export interface AppStore {
     [categoryId: string]: number;
   }) => void;
   updateTeamNamingCategory: (categoryId: string | null) => void;
+  setMaxTeams: (count: number) => void;
+  toggleReserveMode: () => void;
+  togglePlayerReserve: (playerId: number) => void;
 }
 
 // For when users download team data for later use

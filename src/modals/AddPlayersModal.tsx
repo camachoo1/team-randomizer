@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, UserCheck } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import useStore from '../store/useStore';
 import clsx from 'clsx';
@@ -28,14 +28,17 @@ export default function AddPlayersModal({
     addPlayer,
     skillBalancingEnabled,
     skillCategories,
+    reservePlayersEnabled,
   } = useStore();
 
   const [addMode, setAddMode] = useState<'single' | 'bulk'>('single');
+  const [addAsReserve, setAddAsReserve] = useState(false);
 
   const { register, handleSubmit, reset, watch } =
     useForm<PlayerForm>({
       defaultValues: { skillLevel: skillCategories[0]?.id || '' },
     });
+
   const {
     register: registerBulk,
     handleSubmit: handleSubmitBulk,
@@ -52,9 +55,13 @@ export default function AddPlayersModal({
   const onSubmit = (data: PlayerForm) => {
     if (data.playerName.trim()) {
       if (skillBalancingEnabled && data.skillLevel) {
-        addPlayer(data.playerName.trim(), data.skillLevel);
+        addPlayer(
+          data.playerName.trim(),
+          data.skillLevel,
+          addAsReserve
+        );
       } else {
-        addPlayer(data.playerName.trim());
+        addPlayer(data.playerName.trim(), undefined, addAsReserve);
       }
       reset({ playerName: '', skillLevel: data.skillLevel });
     }
@@ -75,9 +82,9 @@ export default function AddPlayersModal({
           )
         ) {
           if (skillBalancingEnabled && data.defaultSkillLevel) {
-            addPlayer(name, data.defaultSkillLevel);
+            addPlayer(name, data.defaultSkillLevel, addAsReserve);
           } else {
-            addPlayer(name);
+            addPlayer(name, undefined, addAsReserve);
           }
         }
       });
@@ -89,6 +96,7 @@ export default function AddPlayersModal({
   const handleClose = useCallback(() => {
     reset();
     resetBulk();
+    setAddAsReserve(false);
     onClose();
   }, [reset, resetBulk, onClose]);
 
@@ -158,6 +166,35 @@ export default function AddPlayersModal({
               Bulk Add
             </button>
           </div>
+
+          {/* Reserve Player Toggle */}
+          {reservePlayersEnabled && (
+            <div className='mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <UserCheck size={16} className='text-orange-600' />
+                  <span className='text-sm font-medium text-orange-900 dark:text-orange-100'>
+                    Add as Reserve Player
+                  </span>
+                </div>
+                <label className='relative inline-flex items-center cursor-pointer'>
+                  <input
+                    type='checkbox'
+                    checked={addAsReserve}
+                    onChange={(e) =>
+                      setAddAsReserve(e.target.checked)
+                    }
+                    className='sr-only peer'
+                  />
+                  <div className='w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[""] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600'></div>
+                </label>
+              </div>
+              <p className='text-xs text-orange-700 dark:text-orange-300 mt-2'>
+                Reserve players won't be assigned to teams
+                automatically and can be promoted later.
+              </p>
+            </div>
+          )}
 
           {addMode === 'single' ? (
             <form

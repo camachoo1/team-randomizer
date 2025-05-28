@@ -1,16 +1,11 @@
 import { useState } from 'react';
-import {
-  RefreshCw,
-  Users,
-  Trophy,
-  Sparkles,
-  Edit2,
-  Award,
-} from 'lucide-react';
-import useStore from '../store/useStore';
-import { Player } from '../types';
+import { RefreshCw, Trophy, Edit2 } from 'lucide-react';
+import useStore from '../../store/useStore';
 import clsx from 'clsx';
+import { Player } from '../../types';
 import PlayerCard from './PlayerCard';
+import EmptyTeamsState from './EmptyTeamState';
+import SkillLegend from './SkillLegend';
 
 export default function TeamDisplay() {
   const {
@@ -113,11 +108,14 @@ export default function TeamDisplay() {
     return distribution;
   };
 
+  const activePlayers = players.filter((p) => !p.isReserve);
+
   return (
     <div
       className='card animate-fade-in min-h-[600px]'
       style={{ animationDelay: '0.2s' }}
     >
+      {/* Header - Keep inline since it's simple */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8'>
         <div className='flex items-center gap-3'>
           <div className='p-3 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-xl'>
@@ -139,7 +137,7 @@ export default function TeamDisplay() {
             'btn-primary flex items-center justify-center gap-2 min-w-[180px]',
             isRandomizing && 'animate-pulse'
           )}
-          disabled={players.length === 0 || isRandomizing}
+          disabled={activePlayers.length === 0 || isRandomizing}
         >
           <RefreshCw
             size={18}
@@ -149,58 +147,18 @@ export default function TeamDisplay() {
         </button>
       </div>
 
-      {/* Skill Balancing Info */}
-      {skillBalancingEnabled &&
-        skillCategories.length > 0 &&
-        teams.length > 0 && (
-          <div className='mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800'>
-            <div className='flex items-center gap-2 mb-3'>
-              <Award size={16} className='text-blue-600' />
-              <h3 className='font-semibold text-blue-900 dark:text-blue-100'>
-                Skill Categories Legend
-              </h3>
-            </div>
-            <div className='flex flex-wrap gap-3'>
-              {skillCategories.map((category) => (
-                <div
-                  key={category.id}
-                  className='flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-800 rounded-full'
-                >
-                  <div
-                    className='w-3 h-3 rounded-full'
-                    style={{ backgroundColor: category.color }}
-                  />
-                  <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                    {category.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Skill Legend - Extract only when it adds value */}
+      <SkillLegend
+        skillBalancingEnabled={skillBalancingEnabled}
+        skillCategories={skillCategories}
+        showLegend={teams.length > 0}
+      />
 
+      {/* Main Content */}
       {teams.length === 0 ? (
-        <div className='flex flex-col items-center justify-center py-24'>
-          <div className='relative mb-6'>
-            <Users
-              size={80}
-              className='text-gray-300 dark:text-gray-700'
-            />
-            <Sparkles
-              size={32}
-              className='absolute -top-4 -right-4 text-primary animate-pulse-subtle'
-            />
-          </div>
-          <h3 className='text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2'>
-            No teams created yet
-          </h3>
-          <p className='text-gray-500 dark:text-gray-400 text-center max-w-md'>
-            Add some players and click "Randomize Teams" to
-            automatically create{' '}
-            {skillBalancingEnabled ? 'skill-balanced' : 'balanced'}{' '}
-            teams
-          </p>
-        </div>
+        <EmptyTeamsState
+          skillBalancingEnabled={skillBalancingEnabled}
+        />
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
           {teams.map((team, teamIndex) => {
@@ -224,6 +182,7 @@ export default function TeamDisplay() {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, teamIndex)}
               >
+                {/* Team Header */}
                 <div className='flex items-center justify-between mb-5'>
                   {editingTeamId === team.id ? (
                     <input
@@ -266,7 +225,7 @@ export default function TeamDisplay() {
                   </span>
                 </div>
 
-                {/* Skill Distribution for Team */}
+                {/* Skill Distribution - Keep inline since it's team-specific */}
                 {skillDistribution &&
                   skillDistribution.length > 0 && (
                     <div className='mb-4 flex flex-wrap gap-1'>
@@ -287,12 +246,13 @@ export default function TeamDisplay() {
                     </div>
                   )}
 
+                {/* Players */}
                 <div className='space-y-2 min-h-[120px]'>
                   {team.players.length === 0 ? (
                     <div
                       className='flex items-center justify-center h-[120px] 
-                                  border-2 border-dashed border-gray-300 dark:border-gray-600 
-                                  rounded-xl text-gray-400'
+                                border-2 border-dashed border-gray-300 dark:border-gray-600 
+                                rounded-xl text-gray-400'
                     >
                       <p className='text-sm font-medium'>
                         Drop players here

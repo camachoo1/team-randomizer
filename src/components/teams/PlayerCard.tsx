@@ -1,12 +1,13 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
-import useStore from '../store/useStore';
+import useStore from '../../store/useStore';
 import clsx from 'clsx';
 
 interface Player {
   id: number;
   name: string;
   skillLevel?: string;
+  isReserve?: boolean;
 }
 
 interface PlayerCardProps {
@@ -44,6 +45,11 @@ export default function PlayerCard({
       ? getSkillCategoryInfo(playerData.skillLevel)
       : null;
 
+  // Don't render reserve players in team displays
+  if (playerData.isReserve) {
+    return null;
+  }
+
   return (
     <div
       draggable={isDraggable}
@@ -60,13 +66,13 @@ export default function PlayerCard({
       }}
     >
       <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-2 flex-1 min-w-0'>
-          {/* Skill Level Indicator */}
+        <div className='flex items-center gap-3 flex-1 min-w-0'>
+          {/* Skill Level Indicator - Just the dot, no text badge */}
           {skillInfo && (
             <div
               className='w-3 h-3 rounded-full flex-shrink-0 border border-white/20'
               style={{ backgroundColor: skillInfo.color }}
-              title={skillInfo.name}
+              title={skillInfo.name} // Keep tooltip for accessibility
             />
           )}
 
@@ -74,22 +80,15 @@ export default function PlayerCard({
           <span className='font-medium select-none truncate'>
             {player.name}
           </span>
-
-          {/* Skill Level Badge (for unlocked players when space allows) */}
-          {skillInfo && !playerData.locked && (
-            <span
-              className='text-xs px-2 py-0.5 rounded-full font-medium text-white flex-shrink-0 hidden sm:inline-block'
-              style={{ backgroundColor: skillInfo.color + '90' }}
-            >
-              {skillInfo.name}
-            </span>
-          )}
         </div>
 
-        {/* Lock Icon */}
-        {playerData.locked && (
-          <Lock size={14} className='ml-2 flex-shrink-0' />
-        )}
+        {/* Status Icons */}
+        <div className='flex items-center gap-1 ml-2 flex-shrink-0'>
+          {/* Lock Icon */}
+          {playerData.locked && (
+            <Lock size={14} className='flex-shrink-0' />
+          )}
+        </div>
       </div>
     </div>
   );
