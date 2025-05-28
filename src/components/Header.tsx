@@ -118,7 +118,8 @@ export default function Header() {
 
               {/* Mobile Share Button */}
               <button
-                onClick={() => setShowImportExport(true)}
+                onClick={() => setShowShare(true)}
+                disabled={teams.length === 0}
                 className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 transition-all duration-200'
                 title='Share'
               >
