@@ -589,7 +589,7 @@ const useStore = create<AppStore>()(
       }) => set({ teamCompositionRules: rules }),
     }),
     {
-      name: 'team-randomizer-storage',
+      name: 'teamify-storage',
       onRehydrateStorage: () => (state) => {
         if (state?.darkMode) {
           document.documentElement.classList.add('dark');
