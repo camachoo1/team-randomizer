@@ -27,7 +27,7 @@ export default function EventSettings() {
   };
 
   return (
-    <div className='card animate-fade-in'>
+    <div className='card animate-fade-in' data-tour='event-settings'>
       <div className='flex items-center gap-3 mb-6'>
         <div className='p-2.5 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-xl'>
           <Sparkles className='text-primary' size={22} />

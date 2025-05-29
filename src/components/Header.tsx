@@ -49,87 +49,90 @@ export default function Header() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div
-              className='flex items-center gap-2'
-              data-tour='export-share'
-            >
-              {/* Challonge Export Button */}
-              <button
-                onClick={() => setShowChallongeExport(true)}
-                disabled={teams.length === 0}
-                className='hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm'
-                title={
-                  teams.length === 0
-                    ? 'Create teams first'
-                    : 'Export teams for Challonge'
-                }
+            {/* Action Buttons Container */}
+            <div className='flex items-center gap-2'>
+              {/* Export/Share buttons wrapper with tour attribute */}
+              <div
+                className='flex items-center gap-2'
+                data-tour='export-share'
               >
-                <Trophy size={16} />
-                <span className='hidden md:inline'>Challonge</span>
-              </button>
+                {/* Challonge Export Button */}
+                <button
+                  onClick={() => setShowChallongeExport(true)}
+                  disabled={teams.length === 0}
+                  className='hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm'
+                  title={
+                    teams.length === 0
+                      ? 'Create teams first'
+                      : 'Export teams for Challonge'
+                  }
+                >
+                  <Trophy size={16} />
+                  <span className='hidden md:inline'>Challonge</span>
+                </button>
 
-              {/* Mobile Challonge Export Button */}
-              <button
-                onClick={() => setShowChallongeExport(true)}
-                disabled={teams.length === 0}
-                className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
-                title={
-                  teams.length === 0
-                    ? 'Create teams first'
-                    : 'Export for Challonge'
-                }
-              >
-                <Trophy size={18} />
-              </button>
+                {/* Mobile Challonge Export Button */}
+                <button
+                  onClick={() => setShowChallongeExport(true)}
+                  disabled={teams.length === 0}
+                  className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                  title={
+                    teams.length === 0
+                      ? 'Create teams first'
+                      : 'Export for Challonge'
+                  }
+                >
+                  <Trophy size={18} />
+                </button>
 
-              {/* Import/Export Button */}
-              <button
-                onClick={() => setShowImportExport(true)}
-                className='hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-200 text-sm font-medium shadow-sm'
-                title='Import or export team configurations'
-              >
-                <FileDown size={16} />
-                <span className='hidden md:inline'>
-                  Import/Export
-                </span>
-              </button>
+                {/* Import/Export Button */}
+                <button
+                  onClick={() => setShowImportExport(true)}
+                  className='hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-200 text-sm font-medium shadow-sm'
+                  title='Import or export team configurations'
+                >
+                  <FileDown size={16} />
+                  <span className='hidden md:inline'>
+                    Import/Export
+                  </span>
+                </button>
 
-              {/* Mobile Import/Export Button */}
-              <button
-                onClick={() => setShowImportExport(true)}
-                className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-200'
-                title='Import/Export'
-              >
-                <FileDown size={18} />
-              </button>
+                {/* Mobile Import/Export Button */}
+                <button
+                  onClick={() => setShowImportExport(true)}
+                  className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-200'
+                  title='Import/Export'
+                >
+                  <FileDown size={18} />
+                </button>
 
-              {/* Share Button */}
-              <button
-                onClick={() => setShowShare(true)}
-                disabled={teams.length === 0}
-                className='hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm'
-                title={
-                  teams.length === 0
-                    ? 'Create teams first'
-                    : 'Share teams'
-                }
-              >
-                <Share2 size={16} />
-                <span className='hidden md:inline'>Share</span>
-              </button>
+                {/* Share Button */}
+                <button
+                  onClick={() => setShowShare(true)}
+                  disabled={teams.length === 0}
+                  className='hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm'
+                  title={
+                    teams.length === 0
+                      ? 'Create teams first'
+                      : 'Share teams'
+                  }
+                >
+                  <Share2 size={16} />
+                  <span className='hidden md:inline'>Share</span>
+                </button>
 
-              {/* Mobile Share Button */}
-              <button
-                onClick={() => setShowShare(true)}
-                disabled={teams.length === 0}
-                className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 transition-all duration-200'
-                title='Share'
-              >
-                <Share2 size={18} />
-              </button>
+                {/* Mobile Share Button */}
+                <button
+                  onClick={() => setShowShare(true)}
+                  disabled={teams.length === 0}
+                  className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                  title='Share'
+                >
+                  <Share2 size={18} />
+                </button>
+              </div>
 
-              {/* Dark Mode Toggle */}
+              {/* Dark Mode Toggle - separate from tour */}
               <button
                 onClick={toggleDarkMode}
                 className='p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group'

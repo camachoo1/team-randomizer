@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   X,
   ChevronRight,
@@ -8,6 +7,7 @@ import {
   Trophy,
   Share2,
 } from 'lucide-react';
+import { useOnboarding } from '../hooks/useOnboarding';
 
 interface OnboardingOverlayProps {
   isOpen: boolean;
@@ -18,203 +18,76 @@ const OnboardingOverlay = ({
   isOpen,
   onClose,
 }: OnboardingOverlayProps) => {
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const steps = useMemo(
-    () => [
-      {
-        title: 'Welcome to Teamify!',
-        description:
-          "Create balanced teams for tournaments and events with ease. Let's get you started with a quick tour.",
-        icon: <Users className='w-8 h-8 text-primary' />,
-        highlight: null,
-        position: 'center',
-      },
-      {
-        title: '1. Set Up Your Event',
-        description:
-          'Start by giving your tournament a name and adding organizer details. This helps identify your event.',
-        icon: <Settings className='w-6 h-6 text-blue-600' />,
-        highlight: "[data-tour='event-settings']",
-        position: 'right',
-      },
-      {
-        title: '2. Add Your Players',
-        description:
-          'Add players one by one or import from CSV. You can set skill levels for better team balancing.',
-        icon: <Users className='w-6 h-6 text-green-600' />,
-        highlight: "[data-tour='add-players']",
-        position: 'left',
-      },
-      {
-        title: '3. Generate Balanced Teams',
-        description:
-          "Once you have players, use the 'Randomize Teams' button to create balanced teams. Enable skill balancing for fairer matches.",
-        icon: <Trophy className='w-6 h-6 text-orange-600' />,
-        highlight: "[data-tour='generate-teams']",
-        position: 'left',
-      },
-      {
-        title: '4. Share & Export',
-        description:
-          'Export your teams for tournament platforms like Challonge, or share them with participants using the share feature.',
-        icon: <Share2 className='w-6 h-6 text-purple-600' />,
-        highlight: "[data-tour='export-share']",
-        position: 'center',
-      },
-    ],
-    []
-  );
-
-  const removeHighlight = useCallback(() => {
-    steps.forEach((step) => {
-      if (step.highlight) {
-        const element = document.querySelector(
-          step.highlight
-        ) as HTMLElement;
-        if (element) {
-          element.style.position = '';
-          element.style.zIndex = '';
-          element.style.boxShadow = '';
-          element.style.borderRadius = '';
-        }
-      }
-    });
-  }, [steps]);
-
-  const highlightElement = useCallback(() => {
-    removeHighlight();
-    const step = steps[currentStep];
-    if (step.highlight) {
-      const element = document.querySelector(
-        step.highlight
-      ) as HTMLElement;
-      if (element) {
-        element.style.position = 'relative';
-        element.style.zIndex = '60';
-        element.style.boxShadow =
-          '0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 0 8px rgba(59, 130, 246, 0.2)';
-        element.style.borderRadius = '12px';
-      }
-    }
-  }, [currentStep, removeHighlight, steps]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      // Highlight the current step's element
-      highlightElement();
-    } else {
-      document.body.style.overflow = 'unset';
-      removeHighlight();
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-      removeHighlight();
-    };
-  }, [isOpen, currentStep, highlightElement, removeHighlight]);
-
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleClose();
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+  const {
+    currentStep,
+    currentStepData,
+    totalSteps,
+    isTransitioning,
+    tooltipPosition,
+    nextStep,
+    prevStep,
+    skipTour,
+    completeTour,
+    isFirstStep,
+    isLastStep,
+  } = useOnboarding(isOpen);
 
   const handleClose = () => {
-    removeHighlight();
+    completeTour();
     onClose();
-    // Remember that user has seen the tour
-    localStorage.setItem('teamify-tour-completed', 'true');
   };
 
-  const skipTour = () => {
-    handleClose();
+  const handleSkip = () => {
+    skipTour();
+    onClose();
   };
 
-  const getTooltipPosition = () => {
-    const step = steps[currentStep];
-    const element = step.highlight
-      ? document.querySelector(step.highlight)
-      : null;
-
-    if (!element || step.position === 'center') {
-      return {
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-      };
+  const handleNext = () => {
+    if (isLastStep) {
+      handleClose();
+    } else {
+      nextStep();
     }
+  };
 
-    const rect = element.getBoundingClientRect();
-    const tooltipWidth = 400;
-    const tooltipHeight = 200;
-
-    let position = {};
-
-    switch (step.position) {
-      case 'right':
-        position = {
-          top: `${rect.top + rect.height / 2}px`,
-          left: `${rect.right + 20}px`,
-          transform: 'translateY(-50%)',
-        };
-        break;
-      case 'left':
-        position = {
-          top: `${rect.top + rect.height / 2}px`,
-          left: `${rect.left - tooltipWidth - 20}px`,
-          transform: 'translateY(-50%)',
-        };
-        break;
-      case 'bottom':
-        position = {
-          top: `${rect.bottom + 20}px`,
-          left: `${rect.left + rect.width / 2}px`,
-          transform: 'translateX(-50%)',
-        };
-        break;
-      case 'top':
-        position = {
-          top: `${rect.top - tooltipHeight - 20}px`,
-          left: `${rect.left + rect.width / 2}px`,
-          transform: 'translateX(-50%)',
-        };
-        break;
+  // Get the appropriate icon based on iconType
+  const getIcon = () => {
+    switch (currentStepData.iconType) {
+      case 'users':
+        return currentStepData.title === 'Welcome to Teamify!' ? (
+          <Users className='w-8 h-8 text-primary' />
+        ) : (
+          <Users className='w-6 h-6 text-green-600' />
+        );
+      case 'settings':
+        return <Settings className='w-6 h-6 text-blue-600' />;
+      case 'trophy':
+        return <Trophy className='w-6 h-6 text-orange-600' />;
+      case 'share':
+        return <Share2 className='w-6 h-6 text-purple-600' />;
       default:
-        position = {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        };
+        return <Users className='w-6 h-6 text-primary' />;
     }
-
-    return position;
   };
 
   if (!isOpen) return null;
 
-  const currentStepData = steps[currentStep];
-
   return (
-    <div className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center'>
+    <div className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50'>
       {/* Tooltip */}
       <div
-        className='absolute bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-96 max-w-[90vw]'
-        style={getTooltipPosition()}
+        className={`absolute bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-96 max-w-[90vw] transition-all duration-300 ${
+          isTransitioning
+            ? 'opacity-0 pointer-events-none'
+            : 'opacity-100'
+        }`}
+        style={tooltipPosition}
       >
         {/* Close button */}
         <button
           onClick={handleClose}
           className='absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+          aria-label='Close tour'
         >
           <X size={20} className='text-gray-500' />
         </button>
@@ -222,7 +95,7 @@ const OnboardingOverlay = ({
         {/* Content */}
         <div className='mb-6'>
           <div className='flex items-center gap-3 mb-3'>
-            {currentStepData.icon}
+            {getIcon()}
             <h3 className='text-xl font-bold text-gray-900 dark:text-gray-100'>
               {currentStepData.title}
             </h3>
@@ -234,7 +107,7 @@ const OnboardingOverlay = ({
 
         {/* Progress indicators */}
         <div className='flex justify-center gap-2 mb-6'>
-          {steps.map((_, index) => (
+          {Array.from({ length: totalSteps }).map((_, index) => (
             <div
               key={index}
               className={`w-2 h-2 rounded-full transition-colors ${
@@ -251,7 +124,7 @@ const OnboardingOverlay = ({
         {/* Navigation */}
         <div className='flex items-center justify-between'>
           <div className='flex gap-2'>
-            {currentStep > 0 && (
+            {!isFirstStep && (
               <button
                 onClick={prevStep}
                 className='flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors'
@@ -264,21 +137,17 @@ const OnboardingOverlay = ({
 
           <div className='flex gap-2'>
             <button
-              onClick={skipTour}
+              onClick={handleSkip}
               className='px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors'
             >
               Skip Tour
             </button>
             <button
-              onClick={nextStep}
+              onClick={handleNext}
               className='flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium'
             >
-              {currentStep === steps.length - 1
-                ? 'Get Started'
-                : 'Next'}
-              {currentStep < steps.length - 1 && (
-                <ChevronRight size={16} />
-              )}
+              {isLastStep ? 'Get Started' : 'Next'}
+              {!isLastStep && <ChevronRight size={16} />}
             </button>
           </div>
         </div>

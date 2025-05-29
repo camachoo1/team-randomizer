@@ -47,6 +47,7 @@ export default function PlayerDisplay() {
       <div
         className='card animate-fade-in'
         style={{ animationDelay: '0.1s' }}
+        data-tour='add-players'
       >
         {/* Header */}
         <div className='flex items-center gap-3 mb-6'>

@@ -114,6 +114,7 @@ export default function TeamDisplay() {
     <div
       className='card animate-fade-in min-h-[600px]'
       style={{ animationDelay: '0.2s' }}
+      data-tour='generate-teams'
     >
       {/* Header - Keep inline since it's simple */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8'>
