@@ -3,16 +3,21 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply transition-colors duration-300;
-  }
-
   body {
-    @apply bg-surface text-accent antialiased;
+    @apply bg-surface text-accent antialiased transition-colors duration-150;
   }
 
   body.dark {
     @apply bg-surface-dark text-gray-100;
+  }
+
+  /* Apply transitions only to interactive elements */
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    @apply transition-colors duration-200;
   }
 }
 
@@ -45,7 +50,7 @@
   .card {
     @apply bg-white rounded-2xl shadow-xl p-6 border border-gray-100
            dark:bg-card-dark dark:border-border-dark
-           transition-all duration-300 hover:shadow-2xl;
+           transition-colors duration-150 hover:shadow-2xl;
   }
 
   .input-field {
@@ -57,12 +62,19 @@
 
   .glass-header {
     @apply backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 
-           border-b border-gray-200 dark:border-gray-800;
+           border-b border-gray-200 dark:border-gray-800
+           transition-colors duration-150;
   }
 
   .gradient-bg {
     @apply bg-gradient-to-br from-gray-50 via-white to-gray-100 
-           dark:from-surface-dark dark:via-gray-900 dark:to-surface-dark;
+           dark:from-surface-dark dark:via-gray-900 dark:to-surface-dark
+           transition-colors duration-150;
+  }
+
+  /* Add specific transition for text elements that need it */
+  .theme-transition {
+    @apply transition-colors duration-150;
   }
 }
 
