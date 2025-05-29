@@ -50,7 +50,10 @@ export default function Header() {
             </div>
 
             {/* Action Buttons */}
-            <div className='flex items-center gap-2'>
+            <div
+              className='flex items-center gap-2'
+              data-tour='export-share'
+            >
               {/* Challonge Export Button */}
               <button
                 onClick={() => setShowChallongeExport(true)}
