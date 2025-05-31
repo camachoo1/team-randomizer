@@ -64,6 +64,7 @@ export default function AddPlayersModal({
         addPlayer(data.playerName.trim(), undefined, addAsReserve);
       }
       reset({ playerName: '', skillLevel: data.skillLevel });
+      onClose();
     }
   };
 

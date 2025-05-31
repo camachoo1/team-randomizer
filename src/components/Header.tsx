@@ -7,11 +7,13 @@ import {
   Trophy,
   FileDown,
   Share2,
+  Trash2,
 } from 'lucide-react';
 import useStore from '../store/useStore';
 import ImportExportModal from '../modals/ImportExportModal';
 import ChallongeExportModal from '../modals/BulkExportModal';
 import ShareModal from '../modals/ShareModal';
+import ClearAllModal from '../modals/ClearAllModal';
 
 export default function Header() {
   const {
@@ -20,11 +22,26 @@ export default function Header() {
     eventName,
     organizerName,
     teams,
+    players,
+    clearAll,
   } = useStore();
   const [showImportExport, setShowImportExport] = useState(false);
   const [showChallongeExport, setShowChallongeExport] =
     useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const handleClearAll = () => {
+    clearAll();
+    setShowClearConfirm(false);
+  };
+
+  // Check if there's any data to clear
+  const hasDataToClear =
+    teams.length > 0 ||
+    players.length > 0 ||
+    eventName ||
+    organizerName;
 
   return (
     <>
@@ -132,6 +149,35 @@ export default function Header() {
                 </button>
               </div>
 
+              {/* Clear All Button - separate from tour */}
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                disabled={!hasDataToClear}
+                className='hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm'
+                title={
+                  hasDataToClear
+                    ? 'Clear all data'
+                    : 'No data to clear'
+                }
+              >
+                <Trash2 size={16} />
+                <span className='hidden md:inline'>Clear All</span>
+              </button>
+
+              {/* Mobile Clear All Button */}
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                disabled={!hasDataToClear}
+                className='sm:hidden p-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                title={
+                  hasDataToClear
+                    ? 'Clear all data'
+                    : 'No data to clear'
+                }
+              >
+                <Trash2 size={18} />
+              </button>
+
               {/* Dark Mode Toggle - separate from tour */}
               <button
                 onClick={toggleDarkMode}
@@ -167,6 +213,12 @@ export default function Header() {
       <ShareModal
         isOpen={showShare}
         onClose={() => setShowShare(false)}
+      />
+
+      <ClearAllModal
+        isOpen={showClearConfirm}
+        onConfirm={handleClearAll}
+        onClose={() => setShowClearConfirm(false)}
       />
     </>
   );

@@ -1,5 +1,6 @@
 import { Calendar, User, Sparkles, Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
 import useStore from '../store/useStore';
 import clsx from 'clsx';
 
@@ -10,11 +11,13 @@ interface EventForm {
 
 export default function EventSettings() {
   const { eventName, organizerName, setEventInfo } = useStore();
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting, isSubmitSuccessful },
+    reset,
+    formState: { isSubmitting },
   } = useForm<EventForm>({
     defaultValues: {
       eventName,
@@ -22,8 +25,24 @@ export default function EventSettings() {
     },
   });
 
+  // Reset form when store values change (including when cleared)
+  useEffect(() => {
+    reset({
+      eventName,
+      organizerName,
+    });
+  }, [eventName, organizerName, reset]);
+
   const onSubmit = (data: EventForm) => {
     setEventInfo(data.eventName, data.organizerName);
+
+    // Show success state
+    setShowSuccess(true);
+
+    // Reset to normal state after 2 seconds
+    setTimeout(() => {
+      setShowSuccess(false);
+    }, 2000);
   };
 
   return (
@@ -64,12 +83,12 @@ export default function EventSettings() {
           type='submit'
           disabled={isSubmitting}
           className={clsx(
-            'btn-primary w-full flex items-center justify-center gap-2',
-            isSubmitSuccessful && 'bg-green-600 hover:bg-green-700'
+            'btn-primary w-full flex items-center justify-center gap-2 transition-all duration-300',
+            showSuccess && 'bg-green-600 hover:bg-green-700'
           )}
         >
           <Save size={18} />
-          {isSubmitSuccessful ? 'Saved!' : 'Save Settings'}
+          {showSuccess ? 'Saved!' : 'Save Settings'}
         </button>
       </form>
     </div>
