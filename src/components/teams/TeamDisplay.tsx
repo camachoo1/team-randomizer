@@ -116,7 +116,7 @@ export default function TeamDisplay() {
       style={{ animationDelay: '0.2s' }}
       data-tour='generate-teams'
     >
-      {/* Header - Keep inline since it's simple */}
+      {/* Header */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8'>
         <div className='flex items-center gap-3'>
           <div className='p-3 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-xl'>
@@ -148,7 +148,7 @@ export default function TeamDisplay() {
         </button>
       </div>
 
-      {/* Skill Legend - Extract only when it adds value */}
+      {/* Skill Legend */}
       <SkillLegend
         skillBalancingEnabled={skillBalancingEnabled}
         skillCategories={skillCategories}
@@ -226,7 +226,7 @@ export default function TeamDisplay() {
                   </span>
                 </div>
 
-                {/* Skill Distribution - Keep inline since it's team-specific */}
+                {/* Skill Distribution */}
                 {skillDistribution &&
                   skillDistribution.length > 0 && (
                     <div className='mb-4 flex flex-wrap gap-1'>

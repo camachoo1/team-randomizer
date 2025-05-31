@@ -17,13 +17,11 @@ export default function PlayerLists({
 
   return (
     <div className='space-y-6'>
-      {/* Active Players */}
       <ActivePlayersList
         players={activePlayers}
         onEditPlayer={onEditPlayer}
       />
 
-      {/* Reserve Players */}
       {reservePlayersEnabled && (
         <ReservePlayersList
           players={reservePlayers}

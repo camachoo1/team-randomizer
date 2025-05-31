@@ -36,7 +36,6 @@ export default function Header() {
     setShowClearConfirm(false);
   };
 
-  // Check if there's any data to clear
   const hasDataToClear =
     teams.length > 0 ||
     players.length > 0 ||

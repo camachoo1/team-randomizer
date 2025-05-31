@@ -65,7 +65,7 @@ export default function TournamentSettings() {
         </div>
       </div>
 
-      {/* Team Size - Matching blue theme */}
+      {/* Team Size  */}
       <div className='p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800'>
         <label className='flex items-center gap-2 text-sm font-semibold mb-3 text-blue-900 dark:text-blue-100'>
           <Hash size={16} className='text-blue-600' />
@@ -103,7 +103,7 @@ export default function TournamentSettings() {
         </p>
       </div>
 
-      {/* Max Teams - Matching blue theme */}
+      {/* Max Teams  */}
       <div className='p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800'>
         <label className='flex items-center gap-2 text-sm font-semibold mb-3 text-blue-900 dark:text-blue-100'>
           <Target size={16} className='text-blue-600' />

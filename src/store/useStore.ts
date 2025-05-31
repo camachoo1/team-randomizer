@@ -130,13 +130,11 @@ const useStore = create<AppStore>()(
 
       setTeamSize: (size: number) => set({ teamSize: size }),
 
-      // Toggle skill balancing mode
       toggleSkillBalancing: () =>
         set((state) => ({
           skillBalancingEnabled: !state.skillBalancingEnabled,
         })),
 
-      // Add new skill category
       addSkillCategory: (name: string, color: string) =>
         set((state) => ({
           skillCategories: [
@@ -151,7 +149,6 @@ const useStore = create<AppStore>()(
           ],
         })),
 
-      // Remove skill category
       removeSkillCategory: (categoryId: string) =>
         set((state) => {
           // Don't remove if it's the last category
@@ -172,7 +169,6 @@ const useStore = create<AppStore>()(
           };
         }),
 
-      // Update skill category name
       updateSkillCategory: (categoryId: string, newName: string) =>
         set((state) => ({
           skillCategories: state.skillCategories.map((cat) =>
@@ -199,7 +195,6 @@ const useStore = create<AppStore>()(
 
         // Calculate number of teams based on maxTeams setting
         if (state.maxTeams > 0) {
-          // Use the specified max teams
           numTeams = state.maxTeams;
 
           // Ensure we don't create more teams than we have players for
@@ -213,7 +208,6 @@ const useStore = create<AppStore>()(
             numTeams = minTeamsNeeded;
           }
         } else {
-          // Original calculation
           numTeams = Math.ceil(activePlayers.length / state.teamSize);
         }
 
@@ -271,7 +265,6 @@ const useStore = create<AppStore>()(
 
           // Apply composition rules or balanced distribution
           if (hasRules) {
-            // Apply composition rules
             Object.entries(rules).forEach(
               ([categoryId, requiredCount]) => {
                 if (requiredCount > 0 && skillGroups[categoryId]) {
@@ -323,7 +316,6 @@ const useStore = create<AppStore>()(
               }
             });
           } else {
-            // Balanced distribution
             Object.values(skillGroups).forEach((skillGroup) => {
               skillGroup.forEach((player, index) => {
                 const teamIndex = index % numTeams;
@@ -411,7 +403,6 @@ const useStore = create<AppStore>()(
           });
         }
 
-        // Update player teamIds (including reserves)
         const updatedPlayers = state.players.map((player) => {
           if (player.isReserve) {
             return { ...player, teamId: null }; // Keep reserves unassigned
@@ -479,15 +470,12 @@ const useStore = create<AppStore>()(
         const state = get();
         const entry = state.history.find((h) => h.id === historyId);
         if (entry) {
-          // Use the saved players array if available (new format)
-          // Fall back to extracting from teams for backward compatibility
+          // Use the saved players array if available
           let playersToRestore: Player[];
 
           if (entry.players) {
-            // New format: use saved players array (includes reserves)
             playersToRestore = entry.players;
           } else {
-            // Old format: extract players from teams (backward compatibility)
             const allPlayers = entry.teams.flatMap((t) => t.players);
             playersToRestore = allPlayers.filter(
               (player, idx, arr) =>
@@ -500,7 +488,6 @@ const useStore = create<AppStore>()(
             teams: JSON.parse(JSON.stringify(entry.teams)), // Deep clone
             eventName: entry.eventName,
             organizerName: entry.organizerName,
-            // Restore additional settings if available
             ...(entry.maxTeams !== undefined && {
               maxTeams: entry.maxTeams,
             }),

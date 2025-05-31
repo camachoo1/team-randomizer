@@ -69,7 +69,6 @@ export const calculateTooltipPosition = (
     ? (document.querySelector(step.highlight) as HTMLElement)
     : null;
 
-  // Center position for welcome step or when element not found
   if (!element || step.position === 'center') {
     return {
       top: '50%',
@@ -83,7 +82,6 @@ export const calculateTooltipPosition = (
   const tooltipHeight = 300;
   const padding = 20;
 
-  // Calculate viewport boundaries
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
@@ -286,9 +284,8 @@ export const highlightElement = (selector: string): void => {
       '0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 0 8px rgba(59, 130, 246, 0.2)';
     element.style.borderRadius = '12px';
 
-    // Special handling for header buttons - much more aggressive approach
+    // Special handling for header buttons
     if (selector === "[data-tour='export-share']") {
-      // Completely remove backdrop blur with maximum specificity
       element.style.setProperty(
         'backdrop-filter',
         'none',
@@ -313,7 +310,6 @@ export const highlightElement = (selector: string): void => {
         'important'
       );
 
-      // Target the header parent and reduce its blur significantly
       const header = element.closest('header') as HTMLElement;
       if (header) {
         header.style.setProperty(
@@ -327,8 +323,6 @@ export const highlightElement = (selector: string): void => {
           'important'
         );
       }
-
-      // Also target any parent with glass-header class
 
       const glassHeader = element.closest(
         '.glass-header'
@@ -346,10 +340,9 @@ export const highlightElement = (selector: string): void => {
         );
       }
     } else {
-      // Standard blur removal for other elements
       element.style.backdropFilter = 'none';
     }
-    // Remove blur from all child elements with maximum force
+
     const childElements = element.querySelectorAll(
       '*'
     ) as NodeListOf<HTMLElement>;
@@ -365,7 +358,6 @@ export const highlightElement = (selector: string): void => {
           'none',
           'important'
         );
-        // Make button text extra clear
         if (child.tagName === 'BUTTON' || child.tagName === 'SPAN') {
           child.style.setProperty('text-shadow', 'none', 'important');
           child.style.setProperty('filter', 'none', 'important');

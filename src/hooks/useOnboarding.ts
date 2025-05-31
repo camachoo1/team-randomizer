@@ -28,22 +28,17 @@ export const useOnboarding = (isOpen: boolean) => {
         step.highlight
       ) as HTMLElement;
       if (element) {
-        // Scroll to element first
         smoothScrollToElement(element);
 
-        // Wait for scroll completion, then highlight and position
         setTimeout(() => {
           highlightElement(step.highlight!);
 
-          // Calculate position AFTER scroll is complete
           const newPosition = calculateTooltipPosition(step);
           setTooltipPosition(newPosition);
 
-          // Fade back in
           setIsTransitioning(false);
-        }, 400); // Reduced from 500ms for snappier feel
+        }, 400);
       } else {
-        // Element not found, use center position
         setTooltipPosition({
           top: '50%',
           left: '50%',
@@ -52,13 +47,11 @@ export const useOnboarding = (isOpen: boolean) => {
         setIsTransitioning(false);
       }
     } else {
-      // Center positioned steps (welcome, final) - no scroll needed
       setTooltipPosition({
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
       });
-      // Quick fade in for center steps
       setTimeout(() => {
         setIsTransitioning(false);
       }, 100);
@@ -68,21 +61,19 @@ export const useOnboarding = (isOpen: boolean) => {
   // Navigation functions
   const nextStep = useCallback(() => {
     if (currentStep < ONBOARDING_STEP_DATA.length - 1) {
-      // Fade out immediately, then change step
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentStep(currentStep + 1);
-      }, 150); // Quick fade out
+      }, 150);
     }
   }, [currentStep]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
-      // Fade out immediately, then change step
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentStep(currentStep - 1);
-      }, 150); // Quick fade out
+      }, 150);
     }
   }, [currentStep]);
 

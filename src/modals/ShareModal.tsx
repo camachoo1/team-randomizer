@@ -36,7 +36,6 @@ export default function ShareModal({
   const [shorteningError, setShorteningError] = useState('');
 
   const generateShareUrl = useCallback(() => {
-    // Get saved brackets from localStorage
     const savedBrackets = localStorage.getItem('saved-brackets');
     const brackets = savedBrackets ? JSON.parse(savedBrackets) : [];
     const reservePlayers = players.filter((p) => p.isReserve);
@@ -100,7 +99,6 @@ export default function ShareModal({
     setShorteningError('');
 
     try {
-      // TinyURL API - completely free, no API key needed
       const response = await fetch(
         `https://tinyurl.com/api-create.php?url=${encodeURIComponent(
           longUrl
@@ -133,7 +131,7 @@ export default function ShareModal({
     if (isOpen && teams.length > 0) {
       const fullUrl = generateShareUrl();
       setShareUrl(fullUrl);
-      setShortUrl(''); // Reset short URL
+      setShortUrl('');
       setShorteningError('');
 
       // Automatically try to shorten the URL
@@ -193,7 +191,6 @@ export default function ShareModal({
     }
   };
 
-  // Calculate player counts
   const activePlayers = players.filter((p) => !p.isReserve);
   const reservePlayers = players.filter((p) => p.isReserve);
   const totalPlayers = activePlayers.length + reservePlayers.length;

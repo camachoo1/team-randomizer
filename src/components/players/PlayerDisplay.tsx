@@ -38,7 +38,6 @@ export default function PlayerDisplay() {
     setEditingPlayer(null);
   };
 
-  // Calculate player counts for display
   const activePlayers = players.filter((p) => !p.isReserve);
   const reservePlayers = players.filter((p) => p.isReserve);
 
@@ -81,18 +80,11 @@ export default function PlayerDisplay() {
           </div>
         </div>
 
-        {/* Tournament Settings */}
         <TournamentSettings />
-
-        {/* Feature Toggles */}
         <FeatureToggles
           onShowSkillSettings={() => setShowSkillSettings(true)}
         />
-
-        {/* Skill Distribution */}
         <SkillDistribution />
-
-        {/* Player Lists */}
         <PlayerLists onEditPlayer={handleEditPlayer} />
 
         {/* Bottom Stats */}

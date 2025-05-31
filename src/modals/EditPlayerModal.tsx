@@ -56,7 +56,6 @@ export default function EditPlayerModal({
     !isReserveChecked &&
     currentCapacity >= maxActiveSlots;
 
-  // Reset form when player changes or modal opens
   useEffect(() => {
     if (isOpen && player) {
       reset({

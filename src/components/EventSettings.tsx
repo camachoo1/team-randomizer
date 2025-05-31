@@ -25,7 +25,7 @@ export default function EventSettings() {
     },
   });
 
-  // Reset form when store values change (including when cleared)
+  // Reset form when store values change
   useEffect(() => {
     reset({
       eventName,
@@ -35,8 +35,6 @@ export default function EventSettings() {
 
   const onSubmit = (data: EventForm) => {
     setEventInfo(data.eventName, data.organizerName);
-
-    // Show success state
     setShowSuccess(true);
 
     // Reset to normal state after 2 seconds

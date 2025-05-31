@@ -72,19 +72,16 @@ export default function PlayerCard({
             <div
               className='w-3 h-3 rounded-full flex-shrink-0 border border-white/20'
               style={{ backgroundColor: skillInfo.color }}
-              title={skillInfo.name} // Keep tooltip for accessibility
+              title={skillInfo.name}
             />
           )}
 
-          {/* Player Name */}
           <span className='font-medium select-none truncate'>
             {player.name}
           </span>
         </div>
 
-        {/* Status Icons */}
         <div className='flex items-center gap-1 ml-2 flex-shrink-0'>
-          {/* Lock Icon */}
           {playerData.locked && (
             <Lock size={14} className='flex-shrink-0' />
           )}
