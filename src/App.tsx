@@ -60,44 +60,46 @@ function App() {
 
   // Normal app view
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
-      <div className='gradient-bg min-h-screen transition-colors duration-200'>
-        {/* Background decoration */}
-        <div className='fixed inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-subtle' />
-          <div
-            className='absolute -bottom-40 -left-40 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl animate-pulse-subtle'
-            style={{ animationDelay: '1s' }}
-          />
-        </div>
-
-        <Header />
-
-        {/* Main Content */}
-        <main className='container mx-auto px-4 py-8 relative'>
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-            <div className='lg:col-span-1 space-y-6'>
-              <EventSettings />
-              <PlayerDisplay />
-              <History />
-            </div>
-            <div className='lg:col-span-2 space-y-6'>
-              <TeamDisplay />
-              <BracketIntegration />
-            </div>
+    <>
+      <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
+        <div className='gradient-bg min-h-screen transition-colors duration-200'>
+          {/* Background decoration */}
+          <div className='fixed inset-0 overflow-hidden pointer-events-none'>
+            <div className='absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-subtle' />
+            <div
+              className='absolute -bottom-40 -left-40 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl animate-pulse-subtle'
+              style={{ animationDelay: '1s' }}
+            />
           </div>
-        </main>
 
-        {/* Footer */}
-        <Footer />
+          <Header />
 
-        {/* Onboarding Overlay */}
-        <OnboardingOverlay
-          isOpen={showOnboarding}
-          onClose={() => setShowOnboarding(false)}
-        />
+          {/* Main Content */}
+          <main className='container mx-auto px-4 py-8 relative'>
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+              <div className='lg:col-span-1 space-y-6'>
+                <EventSettings />
+                <PlayerDisplay />
+                <History />
+              </div>
+              <div className='lg:col-span-2 space-y-6'>
+                <TeamDisplay />
+                <BracketIntegration />
+              </div>
+            </div>
+          </main>
+
+          {/* Footer */}
+          <Footer />
+        </div>
       </div>
-    </div>
+
+      {/* Onboarding Overlay */}
+      <OnboardingOverlay
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
+    </>
   );
 }
 
