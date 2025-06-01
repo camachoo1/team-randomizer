@@ -3,11 +3,18 @@ import { persist } from 'zustand/middleware';
 import {
   AppStore,
   Team,
-  HistoryEntry,
   ExportData,
   SkillCategory,
   Player,
 } from '../types';
+import {
+  calculateOptimalTeamCount,
+  performSkillBalancedRandomization,
+  performStandardRandomization,
+  applyCustomTeamNaming,
+  updatePlayerTeamAssignments,
+  createHistoryEntry,
+} from '../utils/helper';
 
 // Default skill categories
 const defaultSkillCategories: SkillCategory[] = [
@@ -187,245 +194,50 @@ const useStore = create<AppStore>()(
         const activePlayers = state.players.filter(
           (p) => !p.isReserve
         );
-
         if (activePlayers.length === 0) return;
 
-        let newTeams: Team[] = [];
-        let numTeams: number;
+        // Calculate optimal number of teams
+        const numTeams = calculateOptimalTeamCount(
+          activePlayers.length,
+          state.teamSize,
+          state.maxTeams
+        );
 
-        // Calculate number of teams based on maxTeams setting
-        if (state.maxTeams > 0) {
-          numTeams = state.maxTeams;
-
-          // Ensure we don't create more teams than we have players for
-          const minTeamsNeeded = Math.ceil(
-            activePlayers.length / state.teamSize
-          );
-          if (numTeams > minTeamsNeeded) {
-            console.warn(
-              `Reducing teams from ${numTeams} to ${minTeamsNeeded} based on player count`
-            );
-            numTeams = minTeamsNeeded;
-          }
-        } else {
-          numTeams = Math.ceil(activePlayers.length / state.teamSize);
-        }
+        let newTeams: Team[];
 
         if (
           state.skillBalancingEnabled &&
           state.skillCategories.length > 0
         ) {
-          // Skill-balanced randomization (only for active players)
-          const rules = state.teamCompositionRules;
-          const hasRules = Object.keys(rules).length > 0;
-
-          // Group active players by skill level
-          const skillGroups: { [key: string]: typeof activePlayers } =
-            {};
-          state.skillCategories.forEach((category) => {
-            skillGroups[category.id] = activePlayers
-              .filter(
-                (p) => p.skillLevel === category.id && !p.locked
-              )
-              .sort(() => Math.random() - 0.5);
-          });
-
-          skillGroups['unassigned'] = activePlayers
-            .filter((p) => !p.skillLevel && !p.locked)
-            .sort(() => Math.random() - 0.5);
-
-          // Recalculate teams if composition rules would create more teams than maxTeams
-          if (hasRules && state.maxTeams > 0) {
-            const maxTeamsPerCategory = Object.entries(rules)
-              .map(([categoryId, count]) => {
-                const availablePlayers =
-                  skillGroups[categoryId]?.length || 0;
-                return count > 0
-                  ? Math.floor(availablePlayers / count)
-                  : Infinity;
-              })
-              .filter((count) => count !== Infinity);
-
-            if (maxTeamsPerCategory.length > 0) {
-              const calculatedTeams = Math.min(
-                ...maxTeamsPerCategory
-              );
-              if (calculatedTeams < numTeams) {
-                numTeams = Math.max(1, calculatedTeams);
-              }
-            }
-          }
-
-          // Create empty teams
-          newTeams = Array.from({ length: numTeams }, (_, i) => ({
-            id: Date.now() + i,
-            name: `Team ${i + 1}`,
-            players: [],
-          }));
-
-          // Apply composition rules or balanced distribution
-          if (hasRules) {
-            Object.entries(rules).forEach(
-              ([categoryId, requiredCount]) => {
-                if (requiredCount > 0 && skillGroups[categoryId]) {
-                  const playersInCategory = skillGroups[categoryId];
-                  for (
-                    let teamIndex = 0;
-                    teamIndex < numTeams;
-                    teamIndex++
-                  ) {
-                    for (
-                      let i = 0;
-                      i < requiredCount &&
-                      playersInCategory.length > 0;
-                      i++
-                    ) {
-                      const player = playersInCategory.shift();
-                      if (player) {
-                        newTeams[teamIndex].players.push({
-                          ...player,
-                          teamId: teamIndex,
-                        });
-                      }
-                    }
-                  }
-                }
-              }
-            );
-
-            // Fill remaining spots
-            const remainingPlayers =
-              Object.values(skillGroups).flat();
-            remainingPlayers.forEach((player) => {
-              const teamIndex = newTeams.reduce(
-                (minIdx, team, idx) =>
-                  team.players.length <
-                  newTeams[minIdx].players.length
-                    ? idx
-                    : minIdx,
-                0
-              );
-
-              if (
-                newTeams[teamIndex].players.length < state.teamSize
-              ) {
-                newTeams[teamIndex].players.push({
-                  ...player,
-                  teamId: teamIndex,
-                });
-              }
-            });
-          } else {
-            Object.values(skillGroups).forEach((skillGroup) => {
-              skillGroup.forEach((player, index) => {
-                const teamIndex = index % numTeams;
-                newTeams[teamIndex].players.push({
-                  ...player,
-                  teamId: teamIndex,
-                });
-              });
-            });
-          }
-
-          // Add locked active players
-          const lockedActivePlayers = activePlayers.filter(
-            (p) => p.locked
+          newTeams = performSkillBalancedRandomization(
+            activePlayers,
+            numTeams,
+            state
           );
-          lockedActivePlayers.forEach((player) => {
-            if (player.teamId !== null && player.teamId < numTeams) {
-              newTeams[player.teamId].players.push(player);
-            } else {
-              newTeams[0].players.push({ ...player, teamId: 0 });
-            }
-          });
         } else {
-          // Standard randomization (only for active players)
-          const unlockedActivePlayers = activePlayers.filter(
-            (p) => !p.locked
+          newTeams = performStandardRandomization(
+            activePlayers,
+            numTeams
           );
-          const lockedActivePlayers = activePlayers.filter(
-            (p) => p.locked
-          );
-          const shuffled = [...unlockedActivePlayers].sort(
-            () => Math.random() - 0.5
-          );
-
-          newTeams = Array.from({ length: numTeams }, (_, i) => ({
-            id: Date.now() + i,
-            name: `Team ${i + 1}`,
-            players: [],
-          }));
-
-          // Place locked players first
-          lockedActivePlayers.forEach((player) => {
-            if (player.teamId !== null && player.teamId < numTeams) {
-              newTeams[player.teamId].players.push(player);
-            }
-          });
-
-          // Distribute unlocked players evenly
-          shuffled.forEach((player) => {
-            const teamIndex = newTeams.reduce(
-              (minIdx, team, idx) =>
-                team.players.length < newTeams[minIdx].players.length
-                  ? idx
-                  : minIdx,
-              0
-            );
-            newTeams[teamIndex].players.push({
-              ...player,
-              teamId: teamIndex,
-            });
-          });
         }
 
-        // Apply custom team naming
-        if (
-          state.teamNamingCategoryId &&
-          state.skillBalancingEnabled
-        ) {
-          newTeams = newTeams.map((team, index) => {
-            const namingPlayer = team.players.find((player) => {
-              const playerData = state.players.find(
-                (p) => p.id === player.id
-              );
-              return (
-                playerData?.skillLevel === state.teamNamingCategoryId
-              );
-            });
+        newTeams = applyCustomTeamNaming(
+          newTeams,
+          state.teamNamingCategoryId,
+          state.players
+        );
 
-            return {
-              ...team,
-              name: namingPlayer
-                ? `Team ${namingPlayer.name}`
-                : `Team ${index + 1}`,
-            };
-          });
-        }
+        const updatedPlayers = updatePlayerTeamAssignments(
+          state.players,
+          newTeams
+        );
 
-        const updatedPlayers = state.players.map((player) => {
-          if (player.isReserve) {
-            return { ...player, teamId: null }; // Keep reserves unassigned
-          }
-
-          const team = newTeams.find((t) =>
-            t.players.some((p) => p.id === player.id)
-          );
-          return {
-            ...player,
-            teamId: team ? newTeams.indexOf(team) : null,
-          };
-        });
-
-        // Save to history
-        const historyEntry: HistoryEntry = {
-          id: Date.now(),
-          timestamp: new Date().toISOString(),
-          players: updatedPlayers,
-          teams: JSON.parse(JSON.stringify(newTeams)),
-          eventName: state.eventName,
-          organizerName: state.organizerName,
-        };
+        const historyEntry = createHistoryEntry(
+          updatedPlayers,
+          newTeams,
+          state.eventName,
+          state.organizerName
+        );
 
         set({
           teams: newTeams,
