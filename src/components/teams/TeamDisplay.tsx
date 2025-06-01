@@ -326,7 +326,7 @@ export default function TeamDisplay() {
           <GlobalValidationSummary />
 
           {/* Unassigned Players Pool (Manual Mode Only) */}
-          {manualTeamMode && (
+          {manualTeamMode && hasUnassignedPlayers && (
             <UnassignedPlayersPool
               players={unassignedPlayers}
               dragOverTeam={dragOverTeam}
