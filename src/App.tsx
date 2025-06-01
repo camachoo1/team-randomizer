@@ -15,16 +15,16 @@ function App() {
   const [isShareView, setIsShareView] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Ensure dark mode class is applied on mount
   useEffect(() => {
-    // Ensure dark mode class is applied on mount
     if (darkMode) {
       document.documentElement.classList.add('dark');
       document.body.classList.add('dark');
     }
   }, [darkMode]);
 
+  // Check if we're in share view
   useEffect(() => {
-    // Check if we're in share view
     const checkShareView = () => {
       const hash = window.location.hash;
       setIsShareView(hash.startsWith('#share='));
@@ -36,8 +36,8 @@ function App() {
       window.removeEventListener('hashchange', checkShareView);
   }, []);
 
+  // Check if user has completed the tour
   useEffect(() => {
-    // Check if user has completed the tour
     const tourCompleted = localStorage.getItem(
       'teamify-tour-completed'
     );
@@ -58,7 +58,6 @@ function App() {
     );
   }
 
-  // Normal app view
   return (
     <>
       <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
