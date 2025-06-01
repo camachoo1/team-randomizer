@@ -50,6 +50,7 @@ export interface AppStore {
   skillCategories: SkillCategory[];
   teamCompositionRules: { [categoryId: string]: number };
   teamNamingCategoryId: string | null;
+  manualTeamMode: boolean;
 
   // Actions
   setEventInfo: (eventName: string, organizerName: string) => void;
@@ -88,6 +89,13 @@ export interface AppStore {
   setMaxTeams: (count: number) => void;
   toggleReserveMode: () => void;
   togglePlayerReserve: (playerId: number) => void;
+  createEmptyTeam: (teamName?: string) => void;
+  removeTeam: (teamId: number) => void;
+  assignPlayerToTeam: (playerId: number, teamId: number) => void;
+  removePlayerFromTeam: (playerId: number) => void;
+  setManualMode: (enabled: boolean) => void;
+  fillRemainingTeams: () => void;
+  smartRandomizeTeams: () => void;
 }
 
 // For when users download team data for later use
@@ -99,4 +107,16 @@ export interface ExportData {
   players: Player[];
   teams: Team[];
   teamSize: number;
+}
+
+export interface TeamValidation {
+  isValid: boolean;
+  violations: string[];
+  skillDistribution: {
+    [categoryId: string]: {
+      actual: number;
+      required: number;
+      categoryName: string;
+    };
+  };
 }

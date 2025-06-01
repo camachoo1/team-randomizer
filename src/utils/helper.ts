@@ -4,6 +4,7 @@ import {
   Team,
   AppStore,
   HistoryEntry,
+  TeamValidation,
 } from '../types';
 
 /**
@@ -402,4 +403,229 @@ export const createHistoryEntry = (
     eventName,
     organizerName,
   };
+};
+
+/**
+ * Validates team composition against skill balancing rules.
+ * Checks if each team meets the required number of players per skill category
+ * and identifies any violations or imbalances.
+ *
+ * @param team - The team to validate
+ * @param players - Complete list of players for skill level lookup
+ * @param skillCategories - Available skill categories with names and colors
+ * @param teamCompositionRules - Required number of players per skill category
+ * @param skillBalancingEnabled - Whether skill balancing validation is active
+ * @returns Validation result with status, violations, and skill distribution
+ */
+export const validateTeamComposition = (
+  team: Team,
+  players: Player[],
+  skillCategories: SkillCategory[],
+  teamCompositionRules: { [categoryId: string]: number },
+  skillBalancingEnabled: boolean
+): TeamValidation => {
+  const result: TeamValidation = {
+    isValid: true,
+    violations: [],
+    skillDistribution: {},
+  };
+
+  // Skip validation if skill balancing is disabled or no rules set
+  if (
+    !skillBalancingEnabled ||
+    Object.keys(teamCompositionRules).length === 0
+  ) {
+    return result;
+  }
+
+  const teamPlayerData = team.players
+    .map((p) => players.find((player) => player.id === p.id))
+    .filter(Boolean) as Player[];
+
+  Object.entries(teamCompositionRules).forEach(
+    ([categoryId, requiredCount]) => {
+      if (requiredCount > 0) {
+        const categoryPlayers = teamPlayerData.filter(
+          (p) => p.skillLevel === categoryId
+        );
+        const actualCount = categoryPlayers.length;
+        const categoryName =
+          skillCategories.find((c) => c.id === categoryId)?.name ||
+          categoryId;
+
+        result.skillDistribution[categoryId] = {
+          actual: actualCount,
+          required: requiredCount,
+          categoryName,
+        };
+
+        if (actualCount < requiredCount) {
+          result.violations.push(
+            `Needs ${
+              requiredCount - actualCount
+            } more ${categoryName} player(s)`
+          );
+          result.isValid = false;
+        } else if (actualCount > requiredCount) {
+          result.violations.push(
+            `Has ${
+              actualCount - requiredCount
+            } too many ${categoryName} player(s)`
+          );
+          result.isValid = false;
+        }
+      }
+    }
+  );
+
+  return result;
+};
+
+type TeamState = Pick<AppStore, 'players' | 'teams' | 'teamSize'>;
+
+/**
+ * Distributes players according to composition rules while considering existing team assignments.
+ * Calculates deficits for each team and fills them using round-robin distribution to ensure
+ * balanced skill allocation across all teams. Prioritizes teams with the greatest need.
+ *
+ * @param teams - Array of teams to populate with players (may already contain some players)
+ * @param rules - Composition rules specifying required players per skill category
+ * @param skillGroups - Players grouped by skill categories, available for assignment
+ * @param state - Application state containing team size limits and player data
+ */
+export const distributePlayersByRulesWithDeficits = (
+  teams: Team[],
+  rules: { [categoryId: string]: number },
+  skillGroups: { [key: string]: Player[] },
+  state: TeamState
+): void => {
+  Object.entries(rules).forEach(([categoryId, requiredCount]) => {
+    if (
+      requiredCount > 0 &&
+      skillGroups[categoryId] &&
+      skillGroups[categoryId].length > 0
+    ) {
+      const playersInCategory = [...skillGroups[categoryId]];
+
+      const teamDeficits = teams.map((team, index) => {
+        const currentCount = team.players.filter((p) => {
+          const playerData = state.players!.find(
+            (pd) => pd.id === p.id
+          );
+          return playerData?.skillLevel === categoryId;
+        }).length;
+
+        const deficit = Math.max(0, requiredCount - currentCount);
+        const hasSpace = team.players.length < state.teamSize;
+
+        return {
+          teamIndex: index,
+          deficit,
+          currentCount,
+          hasSpace,
+          teamName: team.name,
+        };
+      });
+
+      let round = 0;
+      while (playersInCategory.length > 0 && round < requiredCount) {
+        let assignedThisRound = false;
+
+        teamDeficits.forEach((teamInfo) => {
+          if (
+            playersInCategory.length > 0 &&
+            teamInfo.deficit > round &&
+            teamInfo.hasSpace &&
+            teams[teamInfo.teamIndex].players.length < state.teamSize
+          ) {
+            const player = playersInCategory.shift()!;
+            teams[teamInfo.teamIndex].players.push({
+              ...player,
+              teamId: teamInfo.teamIndex,
+            });
+
+            // Update space tracking
+            teamInfo.hasSpace =
+              teams[teamInfo.teamIndex].players.length <
+              state.teamSize;
+            assignedThisRound = true;
+
+            console.log(
+              `Round ${round}: Assigned ${player.name} (${categoryId}) to ${teamInfo.teamName}`
+            );
+          }
+        });
+
+        if (!assignedThisRound) break;
+        round++;
+      }
+
+      // Remove assigned players from the skill group
+      skillGroups[categoryId] = playersInCategory;
+    }
+  });
+
+  const remainingPlayers = Object.values(skillGroups).flat();
+
+  remainingPlayers.forEach((player, index) => {
+    const teamsWithSpace = teams.filter(
+      (team) => team.players.length < state.teamSize
+    );
+
+    if (teamsWithSpace.length > 0) {
+      const targetTeamIndex = teams.findIndex(
+        (team) =>
+          team.id === teamsWithSpace[index % teamsWithSpace.length].id
+      );
+
+      if (
+        targetTeamIndex !== -1 &&
+        teams[targetTeamIndex].players.length < state.teamSize
+      ) {
+        teams[targetTeamIndex].players.push({
+          ...player,
+          teamId: targetTeamIndex,
+        });
+      }
+    }
+  });
+};
+
+/**
+ * Adds locked players to teams while respecting team size limits.
+ * Attempts to place players in their preferred team if it has space,
+ * otherwise finds the first available team with capacity.
+ *
+ * @param teams - Array of teams to add locked players to
+ * @param lockedPlayers - Players that are locked and need team assignment
+ * @param teamSize - Maximum number of players allowed per team
+ */
+export const addLockedPlayersToPartialTeams = (
+  teams: Team[],
+  lockedPlayers: Player[],
+  teamSize: number
+): void => {
+  lockedPlayers.forEach((player) => {
+    let targetTeamIndex = 0;
+
+    if (
+      player.teamId !== null &&
+      player.teamId < teams.length &&
+      teams[player.teamId].players.length < teamSize
+    ) {
+      targetTeamIndex = player.teamId;
+    } else {
+      const teamWithSpace = teams.findIndex(
+        (team) => team.players.length < teamSize
+      );
+      targetTeamIndex = teamWithSpace !== -1 ? teamWithSpace : 0;
+    }
+
+    if (teams[targetTeamIndex].players.length < teamSize) {
+      teams[targetTeamIndex].players.push({
+        ...player,
+        teamId: targetTeamIndex,
+      });
+    }
+  });
 };
