@@ -307,8 +307,6 @@ const useStore = create<AppStore>()(
           state.skillBalancingEnabled &&
           state.skillCategories.length > 0
         ) {
-          // Use the existing skill-balanced randomization logic
-          // (Your existing implementation is fine for full randomization)
           newTeams = performSkillBalancedRandomization(
             activePlayers,
             numTeams,
@@ -494,10 +492,8 @@ const useStore = create<AppStore>()(
         const state = get();
 
         if (state.manualTeamMode) {
-          // In manual mode, only assign unassigned players
           state.fillRemainingTeams();
         } else {
-          // In auto mode, do full randomization (existing behavior)
           state.randomizeTeams();
         }
       },
